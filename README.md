@@ -1,36 +1,57 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Nio MUDEND Prototype
 
-## Getting Started
+Protótipo interativo do fluxo de Mudança de Endereço (MUDEND) do app Nio.
+Uso: teste de usabilidade não-moderado com clientes reais, com captura de
+dados comportamentais (cliques, tempo por tela, interação com calendário,
+abandono de sessão etc.).
 
-First, run the development server:
+## Stack
+
+- Next.js 14 (App Router)
+- TypeScript
+- Tailwind CSS v4
+- Framer Motion
+- Zustand para state management e captura de eventos
+
+## Rodando localmente
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Acesse http://localhost:3000 — otimizado para mobile (viewport ≤ 430px).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Fontes
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Plus Jakarta Sans é carregada via `next/font/google` (corpo do texto).
+BW Gradual (títulos) é carregada via `@font-face` em `app/globals.css` e cai
+em fallback de sistema até os arquivos existirem. Para ativar, copie:
 
-## Learn More
+- `BWGradual-Regular.ttf`
+- `BWGradual-Medium.ttf`
+- `BWGradual-Bold.ttf`
 
-To learn more about Next.js, take a look at the following resources:
+para `/public/fonts/`.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Tracking
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Todo o comportamento do usuário é capturado em `lib/tracking.ts` e
+persistido (memória + `localStorage`) via o Zustand store em `lib/store.ts`.
+A tela `/mudend/resumo` exibe a sessão completa (formulário + eventos) para
+conferência durante o teste — é uma tela de debug, não faz parte da jornada
+real do usuário.
 
-## Deploy on Vercel
+Tipos de evento: `screen_view`, `screen_leave`, `element_click`,
+`form_input`, `calendar_click`, `checkbox_toggle`, `bottom_sheet_open`,
+`bottom_sheet_close`, `session_complete`, `session_abandon`.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Assets
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Ícones e logos do DS Nio copiados do protótipo MVNO:
+- `/public/icons/` ← ícones do DS Nio
+- `/public/logo/` ← 3 SVGs de logo (Default, White, Highlight)
+
+## Deploy
+
+Vercel — auto-deploy via GitHub main branch.
