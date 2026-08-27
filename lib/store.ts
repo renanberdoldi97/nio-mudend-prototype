@@ -2,35 +2,36 @@
 
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { TrackingEvent, Endereco, Contato, Periodo } from './types';
+import type { TrackingEvent, Periodo } from './types';
+import { CONTATO_MOCK } from './mock-data';
 
 function createSessionId(): string {
   if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID();
   return `session-${Date.now()}-${Math.random().toString(36).slice(2)}`;
 }
 
-const emptyEndereco: Endereco = { cep: '', rua: '', numero: '', bairro: '', cidade: '', estado: '' };
-const emptyContato: Contato = { nome: '', telefone: '', email: '' };
-
 type MudendData = {
   sessionId: string;
   startedAt: number;
   sessionCompleted: boolean;
   events: TrackingEvent[];
-  endereco: Endereco;
+  novoEndereco: string;
   complemento: string;
   dataAgendada: string | null;
   periodo: Periodo | null;
-  contato: Contato;
+  nomeContato: string;
+  telefoneContato: string;
+  protocolo: string | null;
 };
 
 type MudendActions = {
   addEvent: (event: TrackingEvent) => void;
-  updateEndereco: (endereco: Partial<Endereco>) => void;
-  updateComplemento: (complemento: string) => void;
+  updateNovoEndereco: (value: string) => void;
+  updateComplemento: (value: string) => void;
   setDataAgendada: (date: string | null) => void;
   setPeriodo: (periodo: Periodo | null) => void;
-  updateContato: (contato: Partial<Contato>) => void;
+  updateTelefoneContato: (value: string) => void;
+  setProtocolo: (value: string) => void;
   markSessionComplete: () => void;
   reset: () => void;
 };
@@ -43,11 +44,13 @@ function createInitialData(): MudendData {
     startedAt: Date.now(),
     sessionCompleted: false,
     events: [],
-    endereco: emptyEndereco,
+    novoEndereco: '',
     complemento: '',
     dataAgendada: null,
     periodo: null,
-    contato: emptyContato,
+    nomeContato: CONTATO_MOCK.nome,
+    telefoneContato: CONTATO_MOCK.telefone,
+    protocolo: null,
   };
 }
 
@@ -56,12 +59,12 @@ export const useMudendStore = create<MudendState>()(
     (set) => ({
       ...createInitialData(),
       addEvent: (event) => set((state) => ({ events: [...state.events, event] })),
-      updateEndereco: (endereco) =>
-        set((state) => ({ endereco: { ...state.endereco, ...endereco } })),
+      updateNovoEndereco: (novoEndereco) => set({ novoEndereco }),
       updateComplemento: (complemento) => set({ complemento }),
       setDataAgendada: (dataAgendada) => set({ dataAgendada }),
       setPeriodo: (periodo) => set({ periodo }),
-      updateContato: (contato) => set((state) => ({ contato: { ...state.contato, ...contato } })),
+      updateTelefoneContato: (telefoneContato) => set({ telefoneContato }),
+      setProtocolo: (protocolo) => set({ protocolo }),
       markSessionComplete: () => set({ sessionCompleted: true }),
       reset: () => set(createInitialData()),
     }),

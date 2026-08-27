@@ -7,8 +7,23 @@ import type { Periodo } from '@/lib/types';
 
 const OPTIONS: { value: Periodo; label: string; hint: string }[] = [
   { value: 'manha', label: 'Manhã', hint: '08:00 – 12:00' },
-  { value: 'tarde', label: 'Tarde', hint: '13:00 – 18:00' },
+  { value: 'tarde', label: 'Tarde', hint: '14:00 – 18:00' },
 ];
+
+function ClockIcon({ muted }: { muted: boolean }) {
+  return (
+    <svg viewBox="0 0 20 20" fill="none" className="h-5 w-5 shrink-0">
+      <circle cx="10" cy="10" r="8" stroke={muted ? '#B0B0B0' : '#124803'} strokeWidth="1.5" />
+      <path
+        d="M10 6V10L12.5 12"
+        stroke={muted ? '#B0B0B0' : '#124803'}
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
 
 type PeriodSelectorProps = {
   value: Periodo | null;
@@ -19,7 +34,7 @@ export function PeriodSelector({ value, onChange }: PeriodSelectorProps) {
   const pathname = usePathname();
 
   return (
-    <div className="grid grid-cols-2 gap-3">
+    <div className="flex flex-col gap-3">
       {OPTIONS.map((option) => {
         const isSelected = value === option.value;
         return (
@@ -31,12 +46,27 @@ export function PeriodSelector({ value, onChange }: PeriodSelectorProps) {
               onChange(option.value);
             }}
             className={cn(
-              'flex flex-col items-center gap-1 rounded-xl border-[1.5px] py-4',
-              isSelected ? 'border-primary-background bg-verde-claro' : 'border-border bg-white'
+              'flex items-center gap-3 rounded-2xl border-[1.5px] px-4 py-3 text-left',
+              isSelected ? 'border-verde-neon bg-verde-claro' : 'border-border bg-white'
             )}
           >
-            <span className="text-base font-semibold text-verde-escuro">{option.label}</span>
-            <span className="text-xs text-text-secondary">{option.hint}</span>
+            <ClockIcon muted={!isSelected} />
+            <div className="flex-1">
+              <p className={cn('text-sm', isSelected ? 'text-verde-escuro' : 'text-text-secondary')}>
+                {option.label}
+              </p>
+              <p className={cn('text-sm font-semibold', isSelected ? 'text-verde-escuro' : 'text-text-secondary')}>
+                {option.hint}
+              </p>
+            </div>
+            <span
+              className={cn(
+                'flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2',
+                isSelected ? 'border-verde-neon' : 'border-border'
+              )}
+            >
+              {isSelected && <span className="h-2.5 w-2.5 rounded-full bg-verde-neon" />}
+            </span>
           </button>
         );
       })}

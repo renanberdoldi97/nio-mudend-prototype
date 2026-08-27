@@ -2,69 +2,97 @@
 
 import { usePathname, useRouter } from 'next/navigation';
 import { useTrackScreen, trackEvent } from '@/lib/tracking';
-import { useMudendStore } from '@/lib/store';
+import { AppShell } from '@/components/ui/AppShell';
+import { HomeHeader } from '@/components/ui/HomeHeader';
 import { NioIcon, type IconName } from '@/components/icons';
-import { PageTransition } from '@/components/ui/PageTransition';
 
-type Shortcut = { id: string; icon: IconName; label: string; href?: string };
-
-const SHORTCUTS: Shortcut[] = [
-  { id: 'pedir-chip', icon: 'shortcut-pedir-chip', label: 'Pedir chip' },
-  { id: 'segunda-via', icon: 'shortcut-segunda-via', label: '2ª via de fatura' },
-  { id: 'contas-pagas', icon: 'shortcut-contas-pagas', label: 'Contas pagas' },
-  { id: 'mudar-endereco', icon: 'shortcut-mudar-endereco', label: 'Mudar endereço', href: '/produtos' },
-  { id: 'meio-pagamento', icon: 'shortcut-meio-pagamento', label: 'Meio de pagamento' },
-  { id: 'gerenciar-produtos', icon: 'shortcut-gerenciar-produtos', label: 'Gerenciar produtos' },
-  { id: 'diagnosticar-rede', icon: 'shortcut-diagnosticar-rede', label: 'Diagnosticar rede' },
-  { id: 'trocar-senha-wifi', icon: 'shortcut-trocar-senha-wifi', label: 'Trocar senha wifi' },
+const ACESSO_RAPIDO: { icon: IconName; label: string }[] = [
+  { icon: 'tool', label: 'Fazer reparo da internet' },
+  { icon: 'password', label: 'Trocar senha do Wi-Fi' },
+  { icon: 'send', label: 'Atualizar dados de contato' },
+  { icon: 'edit', label: 'Renomear rede Wi-Fi' },
 ];
+
+function OffersCarousel({ items }: { items: string[] }) {
+  return (
+    <div>
+      <div className="flex gap-3 overflow-x-auto no-scrollbar pb-1">
+        {items.map((label) => (
+          <div
+            key={label}
+            className="flex h-28 w-64 shrink-0 items-center justify-center rounded-2xl bg-verde-escuro"
+          >
+            <span className="text-sm font-medium text-white">{label}</span>
+          </div>
+        ))}
+      </div>
+      <div className="mt-2 flex justify-center gap-1.5">
+        <span className="h-1.5 w-1.5 rounded-full bg-verde-neon" />
+        <span className="h-1.5 w-1.5 rounded-full bg-border" />
+      </div>
+    </div>
+  );
+}
 
 export default function HomePage() {
   const pathname = usePathname();
   useTrackScreen(pathname);
   const router = useRouter();
-  const reset = useMudendStore((state) => state.reset);
 
   return (
-    <PageTransition variant="fade" className="flex h-full flex-col">
-      <header className="px-5 pb-4 pt-8">
-        <p className="text-sm text-text-secondary">Olá,</p>
-        <h1 className="text-2xl font-semibold text-verde-escuro">Bem-vindo à Nio</h1>
-      </header>
-      <main className="flex-1 overflow-y-auto no-scrollbar px-5 pb-8">
-        <div className="grid grid-cols-4 gap-3">
-          {SHORTCUTS.map((shortcut) => (
-            <button
-              key={shortcut.id}
-              type="button"
-              disabled={!shortcut.href}
-              onClick={() => {
-                if (!shortcut.href) return;
-                trackEvent('element_click', pathname, `shortcut-${shortcut.id}`);
-                router.push(shortcut.href);
-              }}
-              className={`flex flex-col items-center gap-2 rounded-2xl bg-card-content py-4 ${
-                shortcut.href ? '' : 'opacity-40'
-              }`}
-            >
-              <NioIcon name={shortcut.icon} size={28} />
-              <span className="text-center text-[11px] leading-tight text-verde-escuro">
-                {shortcut.label}
-              </span>
-            </button>
+    <AppShell header={<HomeHeader />}>
+      <div className="px-5 pt-5">
+        <h2 className="mb-3 text-lg font-semibold text-verde-escuro">Faturas em aberto</h2>
+        <div className="mb-8 flex items-start gap-3 rounded-2xl bg-areia p-4">
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white">
+            <NioIcon name="check-circle" size={20} />
+          </span>
+          <div>
+            <p className="text-sm font-semibold text-verde-escuro">Suas faturas estão em dia!</p>
+            <p className="mt-1 text-sm text-text-secondary">
+              A próxima fatura estará disponível 5 dias antes da data de vencimento.
+            </p>
+          </div>
+        </div>
+
+        <h2 className="mb-3 text-lg font-semibold text-verde-escuro">Acesso rápido</h2>
+        <div className="mb-3 flex items-center gap-3 rounded-2xl bg-verde-claro p-4">
+          <NioIcon name="smartphone" size={22} />
+          <span className="flex-1 text-sm font-semibold text-primary-background">Internet móvel 5G</span>
+          <span className="rounded-full bg-verde-escuro px-2.5 py-1 text-[10px] font-semibold text-white">
+            NOVO
+          </span>
+        </div>
+        <div className="mb-8 grid grid-cols-2 gap-3">
+          {ACESSO_RAPIDO.map((item) => (
+            <div key={item.label} className="rounded-2xl border border-border bg-white p-4">
+              <NioIcon name={item.icon} size={20} />
+              <p className="mt-3 text-sm text-verde-escuro">{item.label}</p>
+            </div>
           ))}
         </div>
-      </main>
-      <button
-        type="button"
-        onClick={() => {
-          trackEvent('element_click', pathname, 'home-reiniciar-sessao');
-          reset();
-        }}
-        className="mx-5 mb-6 rounded-full border border-border py-2 text-xs text-text-secondary"
-      >
-        Reiniciar sessão de teste
-      </button>
-    </PageTransition>
+
+        <h2 className="mb-3 text-lg font-semibold text-verde-escuro">Ofertas Nio Fibra</h2>
+        <div className="mb-8">
+          <OffersCarousel items={['Banner up']} />
+        </div>
+
+        <h2 className="mb-3 text-lg font-semibold text-verde-escuro">Ofertas parceiras</h2>
+        <div className="mb-10">
+          <OffersCarousel items={['Banner oferta 1']} />
+        </div>
+
+        <button
+          type="button"
+          onClick={() => {
+            trackEvent('element_click', pathname, 'home-debug-resumo');
+            router.push('/mudend/resumo');
+          }}
+          className="mx-auto block text-xs text-text-secondary underline"
+        >
+          Ver dados capturados (debug)
+        </button>
+      </div>
+    </AppShell>
   );
 }

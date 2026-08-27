@@ -4,9 +4,10 @@ import { useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useTrackScreen, trackEvent } from '@/lib/tracking';
 import { useMudendStore } from '@/lib/store';
-import { SuccessScreen } from '@/components/mudend/SuccessScreen';
-import { PageTransition } from '@/components/ui/PageTransition';
+import { FlowHeader } from '@/components/ui/FlowHeader';
+import { FlowScreen } from '@/components/ui/FlowScreen';
 import { Button } from '@/components/ui/Button';
+import { SuccessDetails } from '@/components/mudend/SuccessScreen';
 
 export default function SucessoPage() {
   const pathname = usePathname();
@@ -21,23 +22,17 @@ export default function SucessoPage() {
   }, []);
 
   return (
-    <PageTransition variant="fade" className="flex h-full flex-col px-5 pb-8 pt-8">
-      <SuccessScreen
-        title="Mudança agendada!"
-        description="Você vai receber uma confirmação por e-mail e SMS com todos os detalhes da visita."
-      />
-      <div className="flex flex-col gap-3">
-        <Button
-          trackingId="sucesso-ver-resumo"
-          variant="secondary"
-          onClick={() => router.push('/mudend/resumo')}
-        >
-          Ver dados capturados
+    <FlowScreen
+      header={
+        <FlowHeader title="Agendamento da mudança" rightAction="close" onClose={() => router.push('/')} />
+      }
+      cta={
+        <Button trackingId="sucesso-acompanhar" onClick={() => router.push('/produtos')}>
+          Acompanhar mudança
         </Button>
-        <Button trackingId="sucesso-voltar-home" onClick={() => router.push('/')}>
-          Voltar ao início
-        </Button>
-      </div>
-    </PageTransition>
+      }
+    >
+      <SuccessDetails />
+    </FlowScreen>
   );
 }

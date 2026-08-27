@@ -16,6 +16,13 @@ const variantStyles: Record<ButtonVariant, string> = {
   ghost: 'bg-transparent text-primary-background font-semibold border-0',
 };
 
+const disabledVariantStyles: Record<ButtonVariant, string> = {
+  primary: 'bg-areia text-text-disabled border-0',
+  outline: 'bg-transparent text-text-disabled border-[1.5px] border-border',
+  secondary: 'bg-transparent text-text-disabled border-[1.5px] border-border',
+  ghost: 'bg-transparent text-text-disabled border-0',
+};
+
 const sizeStyles: Record<ButtonSize, string> = {
   sm: 'h-10 px-4 text-sm rounded-full',
   md: 'h-14 px-6 text-base rounded-full',
@@ -69,11 +76,11 @@ export function Button({
       onClick={handleClick}
       disabled={isDisabled}
       className={cn(
-        'flex items-center justify-center gap-2 transition-opacity',
-        variantStyles[variant],
+        'flex items-center justify-center gap-2 transition-colors',
+        isDisabled ? disabledVariantStyles[variant] : variantStyles[variant],
         sizeStyles[size],
         fullWidth ? 'w-full' : 'w-auto',
-        isDisabled ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer',
+        isDisabled ? 'cursor-not-allowed' : 'cursor-pointer',
         className
       )}
     >

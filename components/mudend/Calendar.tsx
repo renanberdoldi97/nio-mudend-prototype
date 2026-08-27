@@ -1,41 +1,24 @@
 'use client';
 
+import { useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { trackEvent } from '@/lib/tracking';
-import type { CalendarDayStatus } from '@/lib/types';
+import { getBlockedReason } from '@/lib/holidays';
 
-type CalendarDay = {
-  date: string; // ISO yyyy-mm-dd
-  label: number;
-  weekday: string;
-  status: CalendarDayStatus;
-};
+const WEEKDAY_LABELS = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'];
 
-// Bloqueia domingos e mais dois dias fixos (simulando agenda cheia), pra ter
-// uma mistura de disponível/bloqueado nos primeiros dias exibidos.
-const BLOCKED_OFFSETS = new Set([3, 10]);
+function toKey(date: Date): string {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
 
-function buildDays(count: number): CalendarDay[] {
-  const days: CalendarDay[] = [];
-  const weekdayFormatter = new Intl.DateTimeFormat('pt-BR', { weekday: 'short' });
+type ViewMonth = { year: number; month: number };
 
-  for (let offset = 1; offset <= count; offset++) {
-    const date = new Date();
-    date.setDate(date.getDate() + offset);
-    const isSunday = date.getDay() === 0;
-    const status: CalendarDayStatus =
-      isSunday || BLOCKED_OFFSETS.has(offset) ? 'bloqueado' : 'disponivel';
-
-    days.push({
-      date: date.toISOString().slice(0, 10),
-      label: date.getDate(),
-      weekday: weekdayFormatter.format(date).replace('.', ''),
-      status,
-    });
-  }
-
-  return days;
+function isSameMonth(a: ViewMonth, b: ViewMonth) {
+  return a.year === b.year && a.month === b.month;
 }
 
 type CalendarProps = {
@@ -45,42 +28,127 @@ type CalendarProps = {
 
 export function Calendar({ selectedDate, onSelect }: CalendarProps) {
   const pathname = usePathname();
-  const days = buildDays(21);
+  const today = new Date();
+  const [view, setView] = useState<ViewMonth>({ year: today.getFullYear(), month: today.getMonth() });
 
-  function handleClick(day: CalendarDay) {
-    trackEvent('calendar_click', pathname, `calendar-day-${day.date}`, {
-      date: day.date,
-      status: day.status,
-    });
-    if (day.status === 'disponivel') {
-      onSelect(day.date);
+  const rawMonthLabel = new Date(view.year, view.month, 1).toLocaleDateString('pt-BR', {
+    month: 'long',
+    year: 'numeric',
+  });
+  const monthLabel = rawMonthLabel.charAt(0).toUpperCase() + rawMonthLabel.slice(1);
+
+  const firstDayOfMonth = new Date(view.year, view.month, 1);
+  const daysInMonth = new Date(view.year, view.month + 1, 0).getDate();
+  const leadingBlanks = firstDayOfMonth.getDay();
+
+  const cells: (Date | null)[] = [
+    ...Array.from({ length: leadingBlanks }, () => null),
+    ...Array.from({ length: daysInMonth }, (_, i) => new Date(view.year, view.month, i + 1)),
+  ];
+
+  const canGoPrev = !isSameMonth(view, { year: today.getFullYear(), month: today.getMonth() });
+
+  function goPrev() {
+    if (!canGoPrev) return;
+    trackEvent('element_click', pathname, 'calendar-mes-anterior');
+    setView((v) => (v.month === 0 ? { year: v.year - 1, month: 11 } : { year: v.year, month: v.month - 1 }));
+  }
+
+  function goNext() {
+    trackEvent('element_click', pathname, 'calendar-proximo-mes');
+    setView((v) => (v.month === 11 ? { year: v.year + 1, month: 0 } : { year: v.year, month: v.month + 1 }));
+  }
+
+  function handleDayClick(date: Date) {
+    const key = toKey(date);
+    const reason = getBlockedReason(date);
+    if (reason) {
+      trackEvent('calendar_click_blocked', pathname, `calendar-day-${key}`, {
+        date: key,
+        status: 'bloqueado',
+        reason,
+      });
+      return;
     }
+    trackEvent('calendar_click', pathname, `calendar-day-${key}`, { date: key, status: 'disponivel' });
+    onSelect(key);
   }
 
   return (
-    <div className="grid grid-cols-3 gap-2">
-      {days.map((day) => {
-        const isSelected = day.date === selectedDate;
-        const isBlocked = day.status === 'bloqueado';
+    <div className="rounded-2xl border border-border bg-white p-4">
+      <div className="mb-3 flex items-center justify-between">
+        <button
+          type="button"
+          onClick={goPrev}
+          disabled={!canGoPrev}
+          className={cn('flex h-8 w-8 items-center justify-center', !canGoPrev && 'opacity-30')}
+          aria-label="Mês anterior"
+        >
+          <svg viewBox="0 0 20 20" fill="none" className="h-4 w-4">
+            <path
+              d="M12.5 15L7.5 10L12.5 5"
+              stroke="#192B1C"
+              strokeWidth="1.8"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </button>
+        <span className="text-base font-semibold text-verde-escuro">{monthLabel}</span>
+        <button
+          type="button"
+          onClick={goNext}
+          className="flex h-8 w-8 items-center justify-center"
+          aria-label="Próximo mês"
+        >
+          <svg viewBox="0 0 20 20" fill="none" className="h-4 w-4">
+            <path
+              d="M7.5 5L12.5 10L7.5 15"
+              stroke="#192B1C"
+              strokeWidth="1.8"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </button>
+      </div>
 
-        return (
-          <button
-            key={day.date}
-            type="button"
-            onClick={() => handleClick(day)}
-            disabled={isBlocked}
-            className={cn(
-              'flex flex-col items-center justify-center gap-0.5 rounded-lg border-[1.5px] py-3',
-              isBlocked && 'border-transparent bg-card-content text-text-secondary opacity-50 cursor-not-allowed',
-              !isBlocked && !isSelected && 'border-border bg-white text-verde-escuro',
-              isSelected && 'border-primary-background bg-verde-claro text-verde-escuro'
-            )}
+      <div className="mb-1 grid grid-cols-7">
+        {WEEKDAY_LABELS.map((label, i) => (
+          <div
+            key={i}
+            className="flex h-8 items-center justify-center text-xs font-medium text-text-secondary"
           >
-            <span className="text-[10px] uppercase tracking-wide">{day.weekday}</span>
-            <span className="text-base font-semibold">{day.label}</span>
-          </button>
-        );
-      })}
+            {label}
+          </div>
+        ))}
+      </div>
+
+      <div className="grid grid-cols-7 gap-y-1">
+        {cells.map((date, i) => {
+          if (!date) return <div key={`blank-${i}`} />;
+          const key = toKey(date);
+          const blocked = getBlockedReason(date);
+          const isSelected = key === selectedDate;
+
+          return (
+            <div key={key} className="flex items-center justify-center">
+              <button
+                type="button"
+                onClick={() => handleDayClick(date)}
+                className={cn(
+                  'flex h-9 w-9 items-center justify-center rounded-full text-sm transition-colors',
+                  blocked && 'text-text-disabled',
+                  !blocked && !isSelected && 'text-verde-escuro',
+                  isSelected && 'bg-verde-neon font-semibold text-verde-escuro'
+                )}
+              >
+                {date.getDate()}
+              </button>
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }

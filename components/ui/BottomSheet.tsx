@@ -19,18 +19,21 @@ export function BottomSheet({ open, onClose, sheetId, title, blocking = false, c
   const pathname = usePathname();
 
   useEffect(() => {
-    if (open) {
-      trackEvent('bottom_sheet_open', pathname, sheetId);
-      document.body.style.overflow = 'hidden';
-    }
+    if (!open) return;
+    // O cleanup roda sempre que `open` deixa de ser true — seja por overlay/drag
+    // (via handleClose) ou por uma ação interna do sheet chamando onClose direto
+    // (ex: "Salvar", selecionar uma opção) — então bottom_sheet_close é sempre
+    // capturado, não só no caminho do overlay.
+    trackEvent('bottom_sheet_open', pathname, sheetId);
+    document.body.style.overflow = 'hidden';
     return () => {
+      trackEvent('bottom_sheet_close', pathname, sheetId);
       document.body.style.overflow = '';
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
   function handleClose() {
-    trackEvent('bottom_sheet_close', pathname, sheetId);
     onClose();
   }
 

@@ -4,6 +4,7 @@ export type TrackingEventType =
   | 'element_click'
   | 'form_input'
   | 'calendar_click'
+  | 'calendar_click_blocked'
   | 'checkbox_toggle'
   | 'bottom_sheet_open'
   | 'bottom_sheet_close'
@@ -19,20 +20,3 @@ export type TrackingEvent = {
 };
 
 export type Periodo = 'manha' | 'tarde';
-
-export type CalendarDayStatus = 'disponivel' | 'bloqueado';
-
-export type Endereco = {
-  cep: string;
-  rua: string;
-  numero: string;
-  bairro: string;
-  cidade: string;
-  estado: string;
-};
-
-export type Contato = {
-  nome: string;
-  telefone: string;
-  email: string;
-};

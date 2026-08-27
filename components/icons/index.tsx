@@ -59,6 +59,7 @@ const ICON_MAP: Record<string, string> = {
   'checkbox-on': '/icons/Checkbox%20On.svg',
   'waze': '/icons/Waze.svg',
   'question': '/icons/Questao.svg',
+  'router': '/icons/icon/router.svg',
   // Ícones de atalho da home — coloridos com detalhes verdes, não themeable
   'shortcut-pedir-chip': '/icons/icon1.svg',
   'shortcut-segunda-via': '/icons/icon2.svg',

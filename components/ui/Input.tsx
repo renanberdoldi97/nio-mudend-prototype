@@ -15,6 +15,11 @@ type InputProps = {
   disabled?: boolean;
   className?: string;
   inputMode?: 'text' | 'numeric' | 'tel' | 'email';
+  /** Mostra borda verde-neon + checkmark, independente do foco. */
+  valid?: boolean;
+  /** Mostra um spinner no lugar do checkmark (ex: consultando CEP). */
+  loading?: boolean;
+  onBlurExtra?: () => void;
 };
 
 export function Input({
@@ -27,6 +32,9 @@ export function Input({
   disabled = false,
   className,
   inputMode,
+  valid = false,
+  loading = false,
+  onBlurExtra,
 }: InputProps) {
   const id = useId();
   const pathname = usePathname();
@@ -37,7 +45,7 @@ export function Input({
     <div
       className={cn(
         'relative w-full h-14 rounded-lg border-[1.5px] px-4 pt-4 transition-colors',
-        focused ? 'border-primary-background' : 'border-border',
+        valid ? 'border-verde-neon' : focused ? 'border-primary-background' : 'border-border',
         disabled ? 'opacity-50' : 'bg-white',
         className
       )}
@@ -63,9 +71,32 @@ export function Input({
         onBlur={() => {
           setFocused(false);
           trackEvent('form_input', pathname, trackingId, { length: value.length });
+          onBlurExtra?.();
         }}
-        className="absolute inset-x-4 bottom-1.5 h-6 bg-transparent outline-none text-base text-verde-escuro"
+        className={cn(
+          'absolute inset-x-4 bottom-1.5 h-6 bg-transparent outline-none text-base text-verde-escuro',
+          (valid || loading) && 'pr-6'
+        )}
       />
+      {loading && (
+        <span className="absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 rounded-full border-2 border-border border-t-primary-background animate-spin" />
+      )}
+      {valid && !loading && (
+        <svg
+          viewBox="0 0 20 20"
+          fill="none"
+          className="absolute right-4 top-1/2 -translate-y-1/2 h-5 w-5"
+        >
+          <circle cx="10" cy="10" r="9" fill="#32E000" />
+          <path
+            d="M6 10.5L8.5 13L14 7"
+            stroke="white"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      )}
     </div>
   );
 }
