@@ -1,7 +1,7 @@
 'use client';
 
 import { useMudendStore } from '@/lib/store';
-import { formatDataExtenso } from '@/lib/utils';
+import { formatDataExtenso, formatEnderecoCompleto } from '@/lib/utils';
 import type { Periodo } from '@/lib/types';
 
 const PERIODO_HORARIO: Record<Periodo, [string, string]> = {
@@ -11,19 +11,26 @@ const PERIODO_HORARIO: Record<Periodo, [string, string]> = {
 
 export function SuccessDetails() {
   const novoEndereco = useMudendStore((state) => state.novoEndereco);
+  const numero = useMudendStore((state) => state.numero);
   const complemento = useMudendStore((state) => state.complemento);
+  const complementoSkipped = useMudendStore((state) => state.complementoSkipped);
   const dataAgendada = useMudendStore((state) => state.dataAgendada);
   const periodo = useMudendStore((state) => state.periodo);
   const telefoneContato = useMudendStore((state) => state.telefoneContato);
   const protocolo = useMudendStore((state) => state.protocolo);
 
-  const enderecoCompleto = [novoEndereco, complemento].filter(Boolean).join(' - ');
+  const enderecoCompleto = formatEnderecoCompleto({
+    novoEndereco,
+    numero,
+    complemento,
+    complementoSkipped,
+  });
   const dataLabel = dataAgendada ? formatDataExtenso(dataAgendada) : '';
   const [horaInicio, horaFim] = periodo ? PERIODO_HORARIO[periodo] : ['', ''];
 
   return (
     <>
-      <span className="mb-4 flex h-8 w-8 items-center justify-center rounded-full border-2 border-verde-neon">
+      <span className="mb-4 flex h-8 w-8 items-center justify-center rounded-full border-2 border-primary-background">
         <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4">
           <path
             d="M5 12.5L9.5 17L19 6.5"
@@ -61,13 +68,13 @@ export function SuccessDetails() {
         </div>
       </div>
 
-      <div className="mt-6 flex items-start gap-2 rounded-xl bg-[#FFF6D6] p-3">
+      <div className="mt-6 flex items-start gap-2 rounded-xl border border-warning-border bg-warning-bg p-3">
         <svg viewBox="0 0 20 20" fill="none" className="mt-0.5 h-4 w-4 shrink-0">
-          <path d="M10 2L18 17H2L10 2Z" stroke="#8A6D00" strokeWidth="1.4" strokeLinejoin="round" />
-          <path d="M10 8V11" stroke="#8A6D00" strokeWidth="1.4" strokeLinecap="round" />
-          <circle cx="10" cy="13.5" r="0.75" fill="#8A6D00" />
+          <path d="M10 2L18 17H2L10 2Z" stroke="#92702A" strokeWidth="1.4" strokeLinejoin="round" />
+          <path d="M10 8V11" stroke="#92702A" strokeWidth="1.4" strokeLinecap="round" />
+          <circle cx="10" cy="13.5" r="0.75" fill="#92702A" />
         </svg>
-        <p className="text-xs text-[#6B5300]">Lembre-se de levar seu roteador para o novo endereço.</p>
+        <p className="text-xs text-warning-text">Lembre-se de levar seu roteador para o novo endereço.</p>
       </div>
     </>
   );

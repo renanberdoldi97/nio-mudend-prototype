@@ -58,3 +58,23 @@ export function formatDataExtenso(iso: string): string {
   const mesCapitalizado = mes.charAt(0).toUpperCase() + mes.slice(1);
   return `${date.getDate()} de ${mesCapitalizado} de ${date.getFullYear()}`;
 }
+
+type EnderecoCompletoParams = {
+  novoEndereco: string;
+  numero: string;
+  complemento: string;
+  complementoSkipped: boolean;
+};
+
+/** Junta rua + número (se separado) + complemento (se houver) num único texto. */
+export function formatEnderecoCompleto({
+  novoEndereco,
+  numero,
+  complemento,
+  complementoSkipped,
+}: EnderecoCompletoParams): string {
+  const ruaComNumero = [novoEndereco, numero].filter(Boolean).join(', ');
+  const partes = [ruaComNumero];
+  if (!complementoSkipped && complemento) partes.push(complemento);
+  return partes.filter(Boolean).join(' - ');
+}

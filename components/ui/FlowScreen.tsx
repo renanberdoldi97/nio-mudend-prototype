@@ -25,7 +25,7 @@ export function FlowScreen({ header, cta, overlay, children, className }: FlowSc
         {children}
       </main>
       {cta && (
-        <div className="absolute inset-x-0 bottom-0 border-t border-border bg-areia/95 px-4 pb-6 pt-3 backdrop-blur">
+        <div className="absolute inset-x-0 bottom-0 border-t border-border bg-white/95 px-4 pb-6 pt-3 backdrop-blur">
           {cta}
         </div>
       )}

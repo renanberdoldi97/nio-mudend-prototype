@@ -23,7 +23,9 @@ export default function ResumoPage() {
   const events = useMudendStore((state) => state.events);
   const sessionId = useMudendStore((state) => state.sessionId);
   const novoEndereco = useMudendStore((state) => state.novoEndereco);
+  const numero = useMudendStore((state) => state.numero);
   const complemento = useMudendStore((state) => state.complemento);
+  const complementoSkipped = useMudendStore((state) => state.complementoSkipped);
   const dataAgendada = useMudendStore((state) => state.dataAgendada);
   const periodo = useMudendStore((state) => state.periodo);
   const nomeContato = useMudendStore((state) => state.nomeContato);
@@ -35,7 +37,7 @@ export default function ResumoPage() {
 
   useEffect(() => {
     setJson(exportEventsAsJSON());
-  }, [events]);
+  }, [events, sessionId]);
 
   function handleCopy() {
     navigator.clipboard.writeText(json);
@@ -53,7 +55,8 @@ export default function ResumoPage() {
         <p className="mb-2 text-sm font-semibold text-verde-escuro">Formulário capturado</p>
         <div className="rounded-2xl border border-border bg-white px-4">
           <Row label="Novo endereço" value={novoEndereco} />
-          <Row label="Complemento" value={complemento} />
+          <Row label="Número" value={numero} />
+          <Row label="Complemento" value={complementoSkipped ? 'Sem complemento' : complemento} />
           <Row label="Data" value={dataAgendada ?? ''} />
           <Row label="Período" value={periodo ?? ''} />
           <Row label="Nome contato" value={nomeContato} />

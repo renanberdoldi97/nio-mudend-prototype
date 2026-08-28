@@ -1,31 +1,5 @@
 @import "tailwindcss";
 
-/* BW Gradual — arquivos ainda não copiados; até lá cai no fallback do stack.
-   Copiar os TTFs pra /public/fonts/ com esses nomes exatos: */
-@font-face {
-  font-family: "BW Gradual";
-  src: url("/fonts/BWGradual-Regular.ttf") format("truetype");
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: "BW Gradual";
-  src: url("/fonts/BWGradual-Medium.ttf") format("truetype");
-  font-weight: 500;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: "BW Gradual";
-  src: url("/fonts/BWGradual-Bold.ttf") format("truetype");
-  font-weight: 700;
-  font-style: normal;
-  font-display: swap;
-}
-
 @theme {
   /* Paleta Nio — MUDEND */
   --color-verde-escuro: #192B1C;
@@ -35,17 +9,20 @@
   --color-areia: #F8F7F0;
   --color-primary-background: #124803;
   --color-card-content: #F8F7F1;
+  --color-icon-badge: #EDEBE0;
+  --color-warning-bg: #FEF3C7;
+  --color-warning-border: #FDE68A;
+  --color-warning-text: #92702A;
 
-  --color-text-primary: #192B1C;
+  --color-text-primary: #1A1A18;
   --color-text-secondary: #5C6B5E;
   --color-text-disabled: #B0B0B0;
   --color-text-inverse: #FFFFFF;
-  --color-border: #D6E3D8;
+  --color-border: #E0E0E0;
   --color-error: #E00032;
   --color-overlay: rgba(25, 43, 28, 0.5);
 
-  /* Tipografia */
-  --font-heading: "BW Gradual", var(--font-plus-jakarta), system-ui, sans-serif;
+  /* Tipografia — só Plus Jakarta Sans */
   --font-body: var(--font-plus-jakarta), system-ui, sans-serif;
 
   /* Radius */
@@ -80,16 +57,12 @@ body {
   text-size-adjust: 100%;
   font-family: var(--font-body);
   color: var(--color-text-primary);
-  background: var(--color-areia);
+  background: #FFFFFF;
 }
 
 button {
   -webkit-tap-highlight-color: transparent;
   outline: none;
-}
-
-h1, h2, h3, h4, h5, h6 {
-  font-family: var(--font-heading);
 }
 
 .no-scrollbar::-webkit-scrollbar {

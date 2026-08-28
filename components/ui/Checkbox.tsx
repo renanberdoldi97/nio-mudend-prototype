@@ -29,7 +29,7 @@ export function Checkbox({ checked, onChange, trackingId, label, className }: Ch
     >
       <span
         className={cn(
-          'mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-md border-[1.5px] transition-colors',
+          'mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-[4px] border-[1.5px] transition-colors',
           checked ? 'bg-primary-background border-primary-background' : 'border-border bg-white'
         )}
       >

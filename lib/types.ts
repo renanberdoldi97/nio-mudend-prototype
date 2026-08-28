@@ -5,6 +5,7 @@ export type TrackingEventType =
   | 'form_input'
   | 'calendar_click'
   | 'calendar_click_blocked'
+  | 'complement_skipped'
   | 'checkbox_toggle'
   | 'bottom_sheet_open'
   | 'bottom_sheet_close'

@@ -43,7 +43,10 @@ export function exportEventsAsJSON(): string {
       events: state.events,
       form: {
         novoEndereco: state.novoEndereco,
+        enderecoCepInfo: state.enderecoCepInfo,
+        numero: state.numero,
         complemento: state.complemento,
+        complementoSkipped: state.complementoSkipped,
         dataAgendada: state.dataAgendada,
         periodo: state.periodo,
         nomeContato: state.nomeContato,

@@ -24,8 +24,8 @@ export function ConsultaLoader({ phase }: ConsultaLoaderProps) {
           transition={{ type: 'spring', stiffness: 300, damping: 20 }}
           className="flex flex-col items-center gap-6"
         >
-          <span className="flex h-14 w-14 items-center justify-center rounded-full border-2 border-verde-neon">
-            <svg viewBox="0 0 24 24" fill="none" className="h-6 w-6">
+          <span className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-primary-background">
+            <svg viewBox="0 0 24 24" fill="none" className="h-5 w-5">
               <path
                 d="M5 12.5L9.5 17L19 6.5"
                 stroke="#124803"

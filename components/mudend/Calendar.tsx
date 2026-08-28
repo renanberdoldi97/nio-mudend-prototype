@@ -75,7 +75,7 @@ export function Calendar({ selectedDate, onSelect }: CalendarProps) {
   }
 
   return (
-    <div className="rounded-2xl border border-border bg-white p-4">
+    <div className="rounded-lg border border-border bg-white p-4">
       <div className="mb-3 flex items-center justify-between">
         <button
           type="button"
@@ -139,7 +139,7 @@ export function Calendar({ selectedDate, onSelect }: CalendarProps) {
                 className={cn(
                   'flex h-9 w-9 items-center justify-center rounded-full text-sm transition-colors',
                   blocked && 'text-text-disabled',
-                  !blocked && !isSelected && 'text-verde-escuro',
+                  !blocked && !isSelected && 'text-text-primary',
                   isSelected && 'bg-verde-neon font-semibold text-verde-escuro'
                 )}
               >

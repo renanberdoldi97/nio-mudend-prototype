@@ -46,8 +46,8 @@ export function PeriodSelector({ value, onChange }: PeriodSelectorProps) {
               onChange(option.value);
             }}
             className={cn(
-              'flex items-center gap-3 rounded-2xl border-[1.5px] px-4 py-3 text-left',
-              isSelected ? 'border-verde-neon bg-verde-claro' : 'border-border bg-white'
+              'flex items-center gap-3 rounded-md border-[1.5px] px-4 py-3 text-left',
+              isSelected ? 'border-primary-background bg-verde-claro' : 'border-border bg-white'
             )}
           >
             <ClockIcon muted={!isSelected} />
@@ -62,10 +62,10 @@ export function PeriodSelector({ value, onChange }: PeriodSelectorProps) {
             <span
               className={cn(
                 'flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2',
-                isSelected ? 'border-verde-neon' : 'border-border'
+                isSelected ? 'border-primary-background' : 'border-border'
               )}
             >
-              {isSelected && <span className="h-2.5 w-2.5 rounded-full bg-verde-neon" />}
+              {isSelected && <span className="h-2.5 w-2.5 rounded-full bg-primary-background" />}
             </span>
           </button>
         );

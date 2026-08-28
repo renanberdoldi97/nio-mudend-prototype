@@ -10,10 +10,11 @@ import { ExitConfirmSheet } from '@/components/ui/ExitConfirmSheet';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
-import { ComplementoSheet } from '@/components/mudend/ComplementoSheet';
 import { HouseIllustration } from '@/components/mudend/HouseIllustration';
 import { ENDERECO_ATUAL } from '@/lib/mock-data';
-import { isCepLike, fetchViaCep } from '@/lib/viacep';
+import { isCepLike, fetchViaCep, hasNumero } from '@/lib/viacep';
+
+type ValidationSource = 'cep' | 'text' | null;
 
 export default function EnderecoPage() {
   const pathname = usePathname();
@@ -22,16 +23,27 @@ export default function EnderecoPage() {
 
   const novoEndereco = useMudendStore((state) => state.novoEndereco);
   const updateNovoEndereco = useMudendStore((state) => state.updateNovoEndereco);
+  const enderecoCepInfo = useMudendStore((state) => state.enderecoCepInfo);
+  const setEnderecoCepInfo = useMudendStore((state) => state.setEnderecoCepInfo);
+  const numero = useMudendStore((state) => state.numero);
+  const updateNumero = useMudendStore((state) => state.updateNumero);
   const complemento = useMudendStore((state) => state.complemento);
   const updateComplemento = useMudendStore((state) => state.updateComplemento);
+  const complementoSkipped = useMudendStore((state) => state.complementoSkipped);
+  const setComplementoSkipped = useMudendStore((state) => state.setComplementoSkipped);
 
   const [exitOpen, setExitOpen] = useState(false);
-  const [complementoSheetOpen, setComplementoSheetOpen] = useState(false);
-  const [complementoCustom, setComplementoCustom] = useState(false);
   const [cepLoading, setCepLoading] = useState(false);
+  const [cepError, setCepError] = useState<string | null>(null);
+  const [validationSource, setValidationSource] = useState<ValidationSource>(
+    novoEndereco.trim().length >= 3 ? 'text' : null
+  );
 
   async function handleEnderecoChange(value: string) {
     updateNovoEndereco(value);
+    setCepError(null);
+    setValidationSource(null);
+
     if (isCepLike(value)) {
       setCepLoading(true);
       const result = await fetchViaCep(value);
@@ -43,20 +55,38 @@ export default function EnderecoPage() {
       if (!aindaEhOMesmoValor) return;
 
       if (result) {
-        updateNovoEndereco(`${result.logradouro}, `);
+        updateNovoEndereco(result.logradouro);
+        setEnderecoCepInfo(`CEP ${result.cep} · ${result.localidade}/${result.uf}`);
+        setValidationSource('cep');
         trackEvent('form_input', pathname, 'endereco-cep-autofill', { cep: value, encontrado: true });
       } else {
+        setEnderecoCepInfo(null);
+        setCepError('CEP não encontrado. Confira o número ou digite o nome da rua.');
         trackEvent('form_input', pathname, 'endereco-cep-autofill', { cep: value, encontrado: false });
       }
+      return;
+    }
+
+    setEnderecoCepInfo(null);
+    if (value.trim().length >= 3) {
+      setValidationSource('text');
     }
   }
 
-  function openComplementoPicker() {
-    trackEvent('element_click', pathname, 'complemento-abrir');
-    setComplementoSheetOpen(true);
-  }
+  const needsNumero = validationSource === 'cep' ? true : !hasNumero(novoEndereco);
+  const showNumero = validationSource !== null && needsNumero;
+  const showComplemento =
+    validationSource !== null && (!needsNumero || numero.trim().length > 0);
 
-  const isValid = novoEndereco.trim().length > 0;
+  const isValid =
+    validationSource !== null &&
+    (!needsNumero || numero.trim().length > 0) &&
+    (complementoSkipped || complemento.trim().length > 0);
+
+  function handleSemComplemento() {
+    trackEvent('complement_skipped', pathname, 'complemento-sem-complemento');
+    setComplementoSkipped(true);
+  }
 
   return (
     <FlowScreen
@@ -73,81 +103,87 @@ export default function EnderecoPage() {
           Continuar
         </Button>
       }
-      overlay={
-        <>
-          <ExitConfirmSheet open={exitOpen} onClose={() => setExitOpen(false)} />
-          <ComplementoSheet
-            open={complementoSheetOpen}
-            onClose={() => setComplementoSheetOpen(false)}
-            onSelect={(value) => {
-              updateComplemento(value);
-              setComplementoCustom(false);
-              setComplementoSheetOpen(false);
-            }}
-            onCustom={() => {
-              setComplementoCustom(true);
-              setComplementoSheetOpen(false);
-            }}
-          />
-        </>
-      }
+      overlay={<ExitConfirmSheet open={exitOpen} onClose={() => setExitOpen(false)} />}
     >
-      <h1 className="mb-2 text-2xl font-semibold text-verde-escuro">
+      <h1 className="mb-2 text-2xl font-semibold text-text-primary">
         Vamos levar sua Nio Fibra pro novo endereço
       </h1>
       <p className="mb-6 text-sm text-text-secondary">
         Você só precisa nos contar pra onde está se mudando.
       </p>
 
-      <p className="mb-2 text-sm font-medium text-verde-escuro">Seu endereço atual</p>
+      <p className="mb-2 text-sm font-medium text-text-primary">Seu endereço atual</p>
       <Card variant="neutral" padding="md" className="mb-6">
         <p className="text-xs text-text-secondary">{ENDERECO_ATUAL.eyebrow}</p>
-        <p className="mt-1 text-sm font-semibold text-verde-escuro">{ENDERECO_ATUAL.linha}</p>
+        <p className="mt-1 text-sm font-semibold text-text-primary">{ENDERECO_ATUAL.linha}</p>
       </Card>
 
-      <p className="mb-2 text-sm font-medium text-verde-escuro">Pra onde você quer levar sua Nio Fibra?</p>
+      <p className="mb-2 text-sm font-medium text-text-primary">Pra onde você quer levar sua Nio Fibra?</p>
       <Input
         label="Seu novo endereço ou CEP"
         value={novoEndereco}
         onChange={handleEnderecoChange}
         trackingId="endereco-novo"
-        valid={isValid && !cepLoading}
+        valid={validationSource !== null && !cepLoading}
         loading={cepLoading}
+        error={cepError ?? undefined}
+        hint={enderecoCepInfo ?? undefined}
       />
 
-      {isValid && (
+      {showNumero && (
         <div className="mt-3">
-          {complementoCustom ? (
-            <Input
-              label="Complemento"
-              value={complemento}
-              onChange={updateComplemento}
-              trackingId="endereco-complemento-custom"
-              valid={complemento.trim().length > 0}
-            />
-          ) : complemento ? (
-            <button
-              type="button"
-              onClick={openComplementoPicker}
-              className="flex h-14 w-full items-center justify-between rounded-lg border-[1.5px] border-verde-neon bg-white px-4 text-left"
-            >
-              <span className="text-base text-verde-escuro">{complemento}</span>
-              <svg viewBox="0 0 20 20" fill="none" className="h-5 w-5">
-                <circle cx="10" cy="10" r="9" fill="#32E000" />
-                <path d="M6 10.5L8.5 13L14 7" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </button>
+          <Input
+            label="Número"
+            value={numero}
+            onChange={updateNumero}
+            trackingId="endereco-numero"
+            inputMode="numeric"
+            valid={numero.trim().length > 0}
+          />
+        </div>
+      )}
+
+      {showComplemento && (
+        <div className="mt-3">
+          {complementoSkipped ? (
+            <div className="flex h-14 w-full items-center justify-between rounded-md border-[1.5px] border-primary-background bg-white px-4">
+              <span className="text-base text-text-primary">Sem complemento</span>
+              <button
+                type="button"
+                onClick={() => {
+                  trackEvent('element_click', pathname, 'complemento-remover-skip');
+                  setComplementoSkipped(false);
+                }}
+                aria-label="Remover marcação de sem complemento"
+              >
+                <svg viewBox="0 0 20 20" fill="none" className="h-4 w-4">
+                  <path
+                    d="M5 5L15 15M15 5L5 15"
+                    stroke="#124803"
+                    strokeWidth="1.8"
+                    strokeLinecap="round"
+                  />
+                </svg>
+              </button>
+            </div>
           ) : (
-            <button
-              type="button"
-              onClick={openComplementoPicker}
-              className="flex h-14 w-full items-center justify-between rounded-lg border-[1.5px] border-border bg-white px-4 text-left"
-            >
-              <span className="text-base text-text-secondary">Complemento</span>
-              <svg viewBox="0 0 20 20" fill="none" className="h-4 w-4">
-                <path d="M5 7.5L10 12.5L15 7.5" stroke="#5C6B5E" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </button>
+            <>
+              <Input
+                label="Complemento"
+                value={complemento}
+                onChange={updateComplemento}
+                trackingId="endereco-complemento"
+                placeholder="Ex: Apartamento 12, Casa 2, Bloco A..."
+                valid={complemento.trim().length > 0}
+              />
+              <button
+                type="button"
+                onClick={handleSemComplemento}
+                className="mt-2 px-1 text-sm font-medium text-primary-background"
+              >
+                Sem complemento
+              </button>
+            </>
           )}
         </div>
       )}
