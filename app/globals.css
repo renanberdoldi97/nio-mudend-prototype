@@ -10,6 +10,8 @@
   --color-primary-background: #124803;
   --color-card-content: #F8F7F1;
   --color-icon-badge: #EDEBE0;
+  /* feedback/info/background-low — usado atrás dos ícones das instruções */
+  --color-info-bg: #E8F0F5;
   --color-warning-bg: #FEF3C7;
   --color-warning-border: #FDE68A;
   --color-warning-text: #92702A;

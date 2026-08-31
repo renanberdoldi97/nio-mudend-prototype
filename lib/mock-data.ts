@@ -3,11 +3,6 @@ export const ENDERECO_ATUAL = {
   linha: 'R. Costa Barros, 2299 São Paulo, SP (03210-001)',
 };
 
-export const CONTATO_MOCK = {
-  nome: 'Ana Silva',
-  telefone: '(11) 9 1319-3836',
-};
-
 export const COMPLEMENTO_OPTIONS = [
   'Apartamento 13',
   'Apartamento 14',

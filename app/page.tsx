@@ -99,7 +99,7 @@ export default function HomePage() {
           type="button"
           onClick={() => {
             trackEvent('element_click', pathname, 'home-debug-resumo');
-            router.push('/mudend/resumo');
+            router.push('/debug');
           }}
           className="mx-auto block text-xs text-text-secondary underline"
         >

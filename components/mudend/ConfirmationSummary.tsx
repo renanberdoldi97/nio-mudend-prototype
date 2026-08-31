@@ -68,7 +68,7 @@ function Row({
       <button
         type="button"
         onClick={onAlterar}
-        className="shrink-0 text-sm font-medium text-primary-background"
+        className="shrink-0 text-sm font-semibold text-primary-background"
       >
         Alterar
       </button>
@@ -97,7 +97,7 @@ export function ConfirmationSummary({
   const enderecoCompleto = formatEnderecoSelecionado(enderecoSugestao, numero, novoEndereco);
 
   return (
-    <div className="flex flex-col gap-7">
+    <div className="flex flex-col gap-6">
       <Row icon={PinOutlineIcon} onAlterar={onAlterarEndereco}>
         <p className="text-xs text-text-secondary">Novo endereço</p>
         <p className="text-sm font-medium text-text-primary">{enderecoCompleto || '—'}</p>

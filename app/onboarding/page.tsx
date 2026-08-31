@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/Button';
 import { AddressAutocomplete } from '@/components/mudend/AddressAutocomplete';
 import { formatSugestaoLinha } from '@/lib/address';
 import { formatPhone } from '@/lib/utils';
+import { useMudendStore } from '@/lib/store';
 import {
   writeParticipantSession,
   createParticipantSessionId,
@@ -46,13 +47,16 @@ export default function OnboardingPage() {
 
   function handleStart() {
     if (!isValid || !sugestao) return;
+    const nome = name.trim();
     writeParticipantSession({
-      name: name.trim(),
+      name: nome,
       phone,
       currentAddress: sugestao,
       sessionId: createParticipantSessionId(),
       startedAt: Date.now(),
     });
+    // Popula o contato do formulário MUDEND já na criação da sessão.
+    useMudendStore.setState({ nomeContato: nome, telefoneContato: phone });
     trackEvent('element_click', pathname, 'onboarding-comecar');
     router.replace('/');
   }

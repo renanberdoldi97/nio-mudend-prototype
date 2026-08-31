@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { useTrackScreen, trackEvent, buildSessionExport } from '@/lib/tracking';
-import { useParticipantSession } from '@/lib/participant-session';
+import { readParticipantSession } from '@/lib/participant-session';
 import { Button } from '@/components/ui/Button';
 
 type SendState = 'loading' | 'success' | 'error';
@@ -11,7 +11,6 @@ type SendState = 'loading' | 'success' | 'error';
 export default function SessaoConcluidaPage() {
   const pathname = usePathname();
   useTrackScreen(pathname);
-  const { session } = useParticipantSession();
 
   const [state, setState] = useState<SendState>('loading');
   const payloadRef = useRef<Record<string, unknown> | null>(null);
@@ -22,10 +21,19 @@ export default function SessaoConcluidaPage() {
     sentRef.current = true;
 
     const exportData = buildSessionExport();
+    const participant = readParticipantSession();
     const payload = {
-      session: session
-        ? { ...session, mudendSessionId: exportData.sessionId }
-        : { mudendSessionId: exportData.sessionId },
+      session: {
+        mudendSessionId: exportData.sessionId,
+        participant: participant
+          ? {
+              name: participant.name,
+              phone: participant.phone,
+              currentAddress: participant.currentAddress,
+              startedAt: participant.startedAt,
+            }
+          : null,
+      },
       form: exportData.form,
       events: exportData.events,
     };

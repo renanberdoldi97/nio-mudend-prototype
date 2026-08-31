@@ -3,7 +3,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { TrackingEvent, Periodo, EnderecoSugestao } from './types';
-import { CONTATO_MOCK } from './mock-data';
+import { readParticipantSession } from './participant-session';
 
 export function createSessionId(): string {
   if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID();
@@ -40,6 +40,8 @@ type MudendActions = {
   setDataAgendada: (date: string | null) => void;
   setPeriodo: (periodo: Periodo | null) => void;
   updateTelefoneContato: (value: string) => void;
+  /** Copia nome/telefone da participantSession pra dentro do formulário (sem sobrescrever edições). */
+  hydrateContatoFromParticipant: () => void;
   setProtocolo: (value: string) => void;
   markSessionComplete: () => void;
   reset: () => void;
@@ -47,7 +49,9 @@ type MudendActions = {
 
 type MudendState = MudendData & MudendActions;
 
-function createInitialData(sessionId: string): MudendData {
+type ContatoInicial = { nome?: string; telefone?: string } | null;
+
+function createInitialData(sessionId: string, contato: ContatoInicial = null): MudendData {
   return {
     sessionId,
     startedAt: Date.now(),
@@ -61,15 +65,17 @@ function createInitialData(sessionId: string): MudendData {
     complementoSkipped: false,
     dataAgendada: null,
     periodo: null,
-    nomeContato: CONTATO_MOCK.nome,
-    telefoneContato: CONTATO_MOCK.telefone,
+    // Sem dados fake: nome/telefone vêm da participantSession (onboarding) ou
+    // ficam vazios até o participante preencher.
+    nomeContato: contato?.nome ?? '',
+    telefoneContato: contato?.telefone ?? '',
     protocolo: null,
   };
 }
 
 export const useMudendStore = create<MudendState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       // String vazia no SSR e no primeiro paint do cliente (evita hydration
       // mismatch, já que crypto.randomUUID() geraria valores diferentes em
       // cada lado). O SessionInit preenche com um UUID de verdade assim que
@@ -85,16 +91,34 @@ export const useMudendStore = create<MudendState>()(
       setDataAgendada: (dataAgendada) => set({ dataAgendada }),
       setPeriodo: (periodo) => set({ periodo }),
       updateTelefoneContato: (telefoneContato) => set({ telefoneContato }),
+      hydrateContatoFromParticipant: () => {
+        const participant = readParticipantSession();
+        if (!participant) return;
+        const { nomeContato, telefoneContato } = get();
+        set({
+          nomeContato: nomeContato || participant.name,
+          telefoneContato: telefoneContato || participant.phone,
+        });
+      },
       setProtocolo: (protocolo) => set({ protocolo }),
       markSessionComplete: () => set({ sessionCompleted: true }),
-      reset: () => set(createInitialData(createSessionId())),
+      reset: () => {
+        const participant = readParticipantSession();
+        set(
+          createInitialData(createSessionId(), {
+            nome: participant?.name,
+            telefone: participant?.phone,
+          })
+        );
+      },
     }),
     {
       name: 'nio-mudend-state',
       // Evita ler o localStorage automaticamente na criação da store (isso
       // aconteceria antes do React hidratar e causaria mismatch entre
       // servidor e cliente pra quem já tem sessão salva). SessionInit chama
-      // rehydrate() manualmente depois do mount.
+      // rehydrate() manualmente depois do mount e, na sequência,
+      // hydrateContatoFromParticipant().
       skipHydration: true,
     }
   )

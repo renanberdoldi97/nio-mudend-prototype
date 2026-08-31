@@ -6,9 +6,18 @@ import { readParticipantSession } from '@/lib/participant-session';
 
 const ONBOARDING_ROUTE = '/onboarding';
 
+/** Rotas que nunca são bloqueadas pelo guard (onboarding + telas de debug). */
+function isExemptRoute(pathname: string): boolean {
+  return (
+    pathname === ONBOARDING_ROUTE ||
+    pathname === '/debug' ||
+    pathname.startsWith('/mudend/resumo')
+  );
+}
+
 /**
  * Enquanto não existir `participantSession` no localStorage, qualquer rota
- * redireciona pro onboarding. O onboarding em si nunca é bloqueado.
+ * redireciona pro onboarding. Onboarding e as telas de debug nunca são bloqueados.
  */
 export function OnboardingGate({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -16,7 +25,7 @@ export function OnboardingGate({ children }: { children: React.ReactNode }) {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    if (pathname === ONBOARDING_ROUTE) {
+    if (isExemptRoute(pathname)) {
       setReady(true);
       return;
     }
@@ -28,7 +37,7 @@ export function OnboardingGate({ children }: { children: React.ReactNode }) {
     setReady(true);
   }, [pathname, router]);
 
-  if (pathname === ONBOARDING_ROUTE) return <>{children}</>;
+  if (isExemptRoute(pathname)) return <>{children}</>;
   if (!ready) return <div className="h-full w-full bg-white" />;
   return <>{children}</>;
 }

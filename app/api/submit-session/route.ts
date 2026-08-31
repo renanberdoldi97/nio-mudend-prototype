@@ -1,7 +1,17 @@
 import { NextResponse } from 'next/server';
 
+type Participant = {
+  name?: string;
+  phone?: string;
+  currentAddress?: { display_name?: string; address?: Record<string, unknown> } | null;
+  startedAt?: number;
+} | null;
+
 type Body = {
-  session?: Record<string, unknown> | null;
+  session?: {
+    mudendSessionId?: string;
+    participant?: Participant;
+  } | null;
   form?: Record<string, unknown> | null;
   events?: unknown[] | null;
 };
@@ -12,16 +22,15 @@ function str(value: unknown): string {
   return String(value);
 }
 
-function currentAddressLabel(session: Record<string, unknown> | null | undefined): string {
-  const addr = session?.currentAddress as
-    | { display_name?: string; address?: Record<string, unknown> }
-    | undefined;
+function currentAddressLabel(participant: Participant): string {
+  const addr = participant?.currentAddress;
   if (!addr) return '—';
   return addr.display_name || str(addr.address);
 }
 
 function toDiscordPayload(body: Body) {
   const { session, form, events } = body;
+  const participant = session?.participant ?? null;
   return {
     embeds: [
       {
@@ -29,10 +38,10 @@ function toDiscordPayload(body: Body) {
         color: 0x124803,
         timestamp: new Date().toISOString(),
         fields: [
-          { name: 'Participante', value: str(session?.name), inline: true },
-          { name: 'Celular', value: str(session?.phone), inline: true },
-          { name: 'Session ID', value: str(session?.sessionId ?? session?.mudendSessionId) },
-          { name: 'Endereço atual', value: currentAddressLabel(session) },
+          { name: 'Participante', value: str(participant?.name), inline: true },
+          { name: 'Celular', value: str(participant?.phone), inline: true },
+          { name: 'mudendSessionId', value: str(session?.mudendSessionId) },
+          { name: 'Endereço atual', value: currentAddressLabel(participant) },
           {
             name: 'Novo endereço',
             value: str(
