@@ -27,23 +27,29 @@ function ClockIcon({ muted }: { muted: boolean }) {
 
 type PeriodSelectorProps = {
   value: Periodo | null;
-  onChange: (value: Periodo) => void;
+  onChange: (value: Periodo | null) => void;
+  /** Sem data selecionada: cards apagados e não clicáveis. */
+  disabled?: boolean;
 };
 
-export function PeriodSelector({ value, onChange }: PeriodSelectorProps) {
+export function PeriodSelector({ value, onChange, disabled = false }: PeriodSelectorProps) {
   const pathname = usePathname();
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className={cn('flex flex-col gap-3', disabled && 'pointer-events-none opacity-40')}>
       {OPTIONS.map((option) => {
-        const isSelected = value === option.value;
+        const isSelected = !disabled && value === option.value;
         return (
           <button
             key={option.value}
             type="button"
+            disabled={disabled}
             onClick={() => {
-              trackEvent('element_click', pathname, `periodo-${option.value}`);
-              onChange(option.value);
+              const next = value === option.value ? null : option.value;
+              trackEvent('element_click', pathname, `periodo-${option.value}`, {
+                acao: next ? 'selecionar' : 'desmarcar',
+              });
+              onChange(next);
             }}
             className={cn(
               'flex items-center gap-3 rounded-md border-[1.5px] px-4 py-3 text-left',
@@ -55,8 +61,13 @@ export function PeriodSelector({ value, onChange }: PeriodSelectorProps) {
               <p className={cn('text-sm', isSelected ? 'text-verde-escuro' : 'text-text-secondary')}>
                 {option.label}
               </p>
-              <p className={cn('text-sm font-semibold', isSelected ? 'text-verde-escuro' : 'text-text-secondary')}>
-                {option.hint}
+              <p
+                className={cn(
+                  'text-sm font-semibold',
+                  isSelected ? 'text-verde-escuro' : 'text-text-secondary'
+                )}
+              >
+                {disabled ? 'Selecione uma data acima' : option.hint}
               </p>
             </div>
             <span

@@ -46,6 +46,43 @@ Tipos de evento: `screen_view`, `screen_leave`, `element_click`,
 `form_input`, `calendar_click`, `checkbox_toggle`, `bottom_sheet_open`,
 `bottom_sheet_close`, `session_complete`, `session_abandon`.
 
+## Onboarding do participante
+
+Na primeira vez que o protótipo abre, a tela `/onboarding` coleta nome,
+celular e endereço atual (autocomplete real). Os dados ficam em
+`localStorage` sob a chave `participantSession` e são consumidos pela home,
+pela tela de endereço do MUDEND e pelo debug. Enquanto não houver sessão,
+qualquer rota redireciona pro onboarding. Para reiniciar, use "Nova sessão"
+na tela `/mudend/resumo`.
+
+## Autocomplete de endereço
+
+`/api/address-search` é um proxy híbrido:
+
+- Query no formato de CEP (`00000-000`) → ViaCEP, devolvendo um único
+  resultado sem número (o participante completa o número no fluxo).
+- Qualquer outro texto → Nominatim (OpenStreetMap), com `User-Agent`
+  próprio exigido pelo serviço.
+
+## Configuração do webhook de sessão
+
+Ao final da jornada, `/sessao-concluida` envia os dados da sessão
+(participante + formulário + eventos) automaticamente para
+`/api/submit-session`, que repassa para o webhook configurado. Se o envio
+falhar, o participante recebe a opção de baixar o JSON localmente.
+
+Configurar env var `SESSION_WEBHOOK_URL` na Vercel. Três opções:
+
+1. Discord (recomendado): criar servidor privado > Settings > Integrations >
+   Webhooks > New Webhook > copiar URL
+2. Slack: criar app com Incoming Webhook e copiar URL
+3. webhook.site (só pra testes rápidos): abrir webhook.site, copiar URL
+   única gerada
+
+Por padrão o payload vai como *rich embed* do Discord. Para enviar o JSON
+puro (necessário no Slack e no webhook.site), defina também
+`SESSION_WEBHOOK_FORMAT=raw`.
+
 ## Assets
 
 Ícones e logos do DS Nio copiados do protótipo MVNO:

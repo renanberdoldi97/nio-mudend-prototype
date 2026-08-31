@@ -22,10 +22,14 @@ export type TrackingEvent = {
 
 export type Periodo = 'manha' | 'tarde';
 
-/** Campos de `address` que o Nominatim devolve com `addressdetails=1`. */
+/**
+ * Campos de `address` que o Nominatim devolve com `addressdetails=1`. O proxy
+ * ViaCEP reaproveita o mesmo formato (com `house_number: null`, já que o CEP
+ * não traz número).
+ */
 export type NominatimAddress = {
   road?: string;
-  house_number?: string;
+  house_number?: string | null;
   suburb?: string;
   neighbourhood?: string;
   city?: string;

@@ -27,8 +27,8 @@ export default function SucessoPage() {
         <FlowHeader title="Agendamento da mudança" rightAction="close" onClose={() => router.push('/')} />
       }
       cta={
-        <Button trackingId="sucesso-acompanhar" onClick={() => router.push('/produtos')}>
-          Acompanhar mudança
+        <Button trackingId="sucesso-concluir" onClick={() => router.push('/sessao-concluida')}>
+          Concluir
         </Button>
       }
     >

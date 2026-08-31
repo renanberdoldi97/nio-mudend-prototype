@@ -33,30 +33,49 @@ export function trackEvent(
   return event;
 }
 
-export function exportEventsAsJSON(): string {
+export type SessionExport = {
+  sessionId: string;
+  startedAt: number;
+  sessionCompleted: boolean;
+  events: ReturnType<typeof useMudendStore.getState>['events'];
+  form: {
+    novoEndereco: string;
+    enderecoCepInfo: string | null;
+    numero: string;
+    complemento: string;
+    complementoSkipped: boolean;
+    dataAgendada: string | null;
+    periodo: string | null;
+    nomeContato: string;
+    telefoneContato: string;
+    protocolo: string | null;
+  };
+};
+
+export function buildSessionExport(): SessionExport {
   const state = useMudendStore.getState();
-  return JSON.stringify(
-    {
-      sessionId: state.sessionId,
-      startedAt: state.startedAt,
-      sessionCompleted: state.sessionCompleted,
-      events: state.events,
-      form: {
-        novoEndereco: state.novoEndereco,
-        enderecoCepInfo: state.enderecoCepInfo,
-        numero: state.numero,
-        complemento: state.complemento,
-        complementoSkipped: state.complementoSkipped,
-        dataAgendada: state.dataAgendada,
-        periodo: state.periodo,
-        nomeContato: state.nomeContato,
-        telefoneContato: state.telefoneContato,
-        protocolo: state.protocolo,
-      },
+  return {
+    sessionId: state.sessionId,
+    startedAt: state.startedAt,
+    sessionCompleted: state.sessionCompleted,
+    events: state.events,
+    form: {
+      novoEndereco: state.novoEndereco,
+      enderecoCepInfo: state.enderecoCepInfo,
+      numero: state.numero,
+      complemento: state.complemento,
+      complementoSkipped: state.complementoSkipped,
+      dataAgendada: state.dataAgendada,
+      periodo: state.periodo,
+      nomeContato: state.nomeContato,
+      telefoneContato: state.telefoneContato,
+      protocolo: state.protocolo,
     },
-    null,
-    2
-  );
+  };
+}
+
+export function exportEventsAsJSON(): string {
+  return JSON.stringify(buildSessionExport(), null, 2);
 }
 
 export function useTrackScreen(screen: string) {

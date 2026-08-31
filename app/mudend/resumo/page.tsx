@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useTrackScreen, exportEventsAsJSON } from '@/lib/tracking';
 import { useMudendStore } from '@/lib/store';
+import { useParticipantSession } from '@/lib/participant-session';
+import { formatSugestaoLinha } from '@/lib/address';
 import { FlowHeader } from '@/components/ui/FlowHeader';
 import { Button } from '@/components/ui/Button';
 
@@ -32,6 +34,7 @@ export default function ResumoPage() {
   const telefoneContato = useMudendStore((state) => state.telefoneContato);
   const protocolo = useMudendStore((state) => state.protocolo);
   const reset = useMudendStore((state) => state.reset);
+  const { session, resetSession } = useParticipantSession();
   const [json, setJson] = useState('');
   const [copied, setCopied] = useState(false);
 
@@ -45,12 +48,29 @@ export default function ResumoPage() {
     setTimeout(() => setCopied(false), 1500);
   }
 
+  function handleNovaSessao() {
+    resetSession();
+    reset();
+    router.push('/onboarding');
+  }
+
   return (
     <div className="flex h-full flex-col">
       <FlowHeader title="Resumo (debug)" rightAction="none" onBack={() => router.push('/')} />
       <main className="flex-1 overflow-y-auto no-scrollbar px-4 pb-8 pt-2">
         <p className="mb-1 text-xs text-text-secondary">Sessão</p>
         <p className="mb-4 break-all font-mono text-xs text-verde-escuro">{sessionId}</p>
+
+        <p className="mb-2 text-sm font-semibold text-verde-escuro">Participante</p>
+        <div className="mb-6 rounded-2xl border border-border bg-white px-4">
+          <Row label="Nome" value={session?.name ?? ''} />
+          <Row label="Celular" value={session?.phone ?? ''} />
+          <Row
+            label="Endereço atual"
+            value={session?.currentAddress ? formatSugestaoLinha(session.currentAddress) : ''}
+          />
+          <Row label="ID do participante" value={session?.sessionId ?? ''} />
+        </div>
 
         <p className="mb-2 text-sm font-semibold text-verde-escuro">Formulário capturado</p>
         <div className="rounded-2xl border border-border bg-white px-4">
@@ -74,6 +94,9 @@ export default function ResumoPage() {
         <div className="mt-4 flex flex-col gap-2">
           <Button variant="secondary" onClick={handleCopy}>
             {copied ? 'Copiado!' : 'Copiar JSON'}
+          </Button>
+          <Button variant="secondary" onClick={handleNovaSessao}>
+            Nova sessão
           </Button>
           <Button
             variant="outline"

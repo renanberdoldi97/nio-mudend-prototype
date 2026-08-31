@@ -41,7 +41,7 @@ export function Card({
       whileTap={onClick ? { scale: 0.98 } : undefined}
       onClick={onClick}
       className={cn(
-        'rounded-xl',
+        'rounded-lg',
         variantStyles[variant],
         paddingStyles[padding],
         elevated && 'shadow-card',

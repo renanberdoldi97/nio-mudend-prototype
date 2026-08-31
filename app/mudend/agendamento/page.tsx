@@ -48,12 +48,10 @@ export default function AgendamentoPage() {
 
       <Calendar selectedDate={dataAgendada} onSelect={setDataAgendada} />
 
-      {dataAgendada && (
-        <div className="mt-6">
-          <p className="mb-3 text-sm font-medium text-verde-escuro">Períodos disponíveis</p>
-          <PeriodSelector value={periodo} onChange={setPeriodo} />
-        </div>
-      )}
+      <div className="mt-6">
+        <p className="mb-3 text-sm font-medium text-verde-escuro">Períodos disponíveis</p>
+        <PeriodSelector value={periodo} onChange={setPeriodo} disabled={!dataAgendada} />
+      </div>
 
       {isValid && dataAgendada && (
         <div className="mt-4 rounded-xl bg-verde-claro px-4 py-3 text-center text-sm">

@@ -12,10 +12,20 @@ type BottomSheetProps = {
   sheetId: string;
   title?: string;
   blocking?: boolean;
+  /** Mostra um botão de fechar (X) no canto superior direito. */
+  showClose?: boolean;
   children: React.ReactNode;
 };
 
-export function BottomSheet({ open, onClose, sheetId, title, blocking = false, children }: BottomSheetProps) {
+export function BottomSheet({
+  open,
+  onClose,
+  sheetId,
+  title,
+  blocking = false,
+  showClose = false,
+  children,
+}: BottomSheetProps) {
   const pathname = usePathname();
 
   useEffect(() => {
@@ -65,6 +75,23 @@ export function BottomSheet({ open, onClose, sheetId, title, blocking = false, c
             )}
           >
             <div className="mx-auto mb-3 h-1.5 w-10 rounded-full bg-border" />
+            {showClose && (
+              <button
+                type="button"
+                onClick={handleClose}
+                aria-label="Fechar"
+                className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center"
+              >
+                <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4">
+                  <path
+                    d="M6 6l12 12M18 6L6 18"
+                    stroke="#192B1C"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                  />
+                </svg>
+              </button>
+            )}
             {title && <h2 className="mb-3 text-lg font-semibold text-verde-escuro">{title}</h2>}
             {children}
           </motion.div>

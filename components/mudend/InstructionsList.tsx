@@ -41,10 +41,10 @@ const ITEMS: { icon: () => React.ReactNode; label: string }[] = [
 
 export function InstructionsList() {
   return (
-    <div className="flex flex-col gap-4 rounded-lg border border-border bg-white p-4">
+    <div className="flex flex-col gap-2 rounded-lg border border-border bg-white p-4">
       {ITEMS.map((item) => (
         <div key={item.label} className="flex items-center gap-3">
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-icon-badge">
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-sm bg-icon-badge">
             <item.icon />
           </span>
           <p className="text-sm text-text-primary">{item.label}</p>

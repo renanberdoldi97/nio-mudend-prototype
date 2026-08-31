@@ -1,7 +1,8 @@
 'use client';
 
 import { useMudendStore } from '@/lib/store';
-import { formatDataExtenso, formatEnderecoCompleto } from '@/lib/utils';
+import { formatDataExtenso } from '@/lib/utils';
+import { formatEnderecoSelecionado } from '@/lib/address';
 import type { Periodo } from '@/lib/types';
 
 const PERIODO_HORARIO: Record<Periodo, [string, string]> = {
@@ -12,19 +13,13 @@ const PERIODO_HORARIO: Record<Periodo, [string, string]> = {
 export function SuccessDetails() {
   const novoEndereco = useMudendStore((state) => state.novoEndereco);
   const numero = useMudendStore((state) => state.numero);
-  const complemento = useMudendStore((state) => state.complemento);
-  const complementoSkipped = useMudendStore((state) => state.complementoSkipped);
+  const enderecoSugestao = useMudendStore((state) => state.enderecoSugestao);
   const dataAgendada = useMudendStore((state) => state.dataAgendada);
   const periodo = useMudendStore((state) => state.periodo);
   const telefoneContato = useMudendStore((state) => state.telefoneContato);
   const protocolo = useMudendStore((state) => state.protocolo);
 
-  const enderecoCompleto = formatEnderecoCompleto({
-    novoEndereco,
-    numero,
-    complemento,
-    complementoSkipped,
-  });
+  const enderecoCompleto = formatEnderecoSelecionado(enderecoSugestao, numero, novoEndereco);
   const dataLabel = dataAgendada ? formatDataExtenso(dataAgendada) : '';
   const [horaInicio, horaFim] = periodo ? PERIODO_HORARIO[periodo] : ['', ''];
 
@@ -68,13 +63,15 @@ export function SuccessDetails() {
         </div>
       </div>
 
-      <div className="mt-6 flex items-start gap-2 rounded-xl border border-warning-border bg-warning-bg p-3">
-        <svg viewBox="0 0 20 20" fill="none" className="mt-0.5 h-4 w-4 shrink-0">
-          <path d="M10 2L18 17H2L10 2Z" stroke="#92702A" strokeWidth="1.4" strokeLinejoin="round" />
-          <path d="M10 8V11" stroke="#92702A" strokeWidth="1.4" strokeLinecap="round" />
-          <circle cx="10" cy="13.5" r="0.75" fill="#92702A" />
+      <div className="mt-6 flex items-start gap-3 rounded-lg bg-warning-bg p-4">
+        <svg viewBox="0 0 20 20" fill="none" className="mt-0.5 h-5 w-5 shrink-0">
+          <path d="M10 2.5L18.5 17.5H1.5L10 2.5Z" stroke="#92400E" strokeWidth="1.5" strokeLinejoin="round" />
+          <path d="M10 8V11.5" stroke="#92400E" strokeWidth="1.5" strokeLinecap="round" />
+          <circle cx="10" cy="14" r="0.9" fill="#92400E" />
         </svg>
-        <p className="text-xs text-warning-text">Lembre-se de levar seu roteador para o novo endereço.</p>
+        <p className="text-sm font-medium text-warning-strong">
+          Lembre-se de levar seu roteador para o novo endereço.
+        </p>
       </div>
     </>
   );

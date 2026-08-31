@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import { Plus_Jakarta_Sans } from 'next/font/google';
 import { SessionInit } from './session-init';
+import { OnboardingGate } from '@/components/ui/OnboardingGate';
 import './globals.css';
 
 const plusJakarta = Plus_Jakarta_Sans({
@@ -34,7 +35,7 @@ export default function RootLayout({
       <body className="antialiased">
         <SessionInit />
         <div className="mx-auto w-full max-w-[430px] h-[100dvh] bg-white relative overflow-clip">
-          {children}
+          <OnboardingGate>{children}</OnboardingGate>
         </div>
       </body>
     </html>

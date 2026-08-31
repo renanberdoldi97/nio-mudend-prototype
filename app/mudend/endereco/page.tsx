@@ -5,6 +5,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { usePathname, useRouter } from 'next/navigation';
 import { useTrackScreen, trackEvent } from '@/lib/tracking';
 import { useMudendStore } from '@/lib/store';
+import { useParticipantSession } from '@/lib/participant-session';
 import { FlowHeader } from '@/components/ui/FlowHeader';
 import { FlowScreen } from '@/components/ui/FlowScreen';
 import { ExitConfirmSheet } from '@/components/ui/ExitConfirmSheet';
@@ -13,10 +14,10 @@ import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Checkbox } from '@/components/ui/Checkbox';
 import { HouseIllustration } from '@/components/mudend/HouseIllustration';
+import { AddressAutocomplete } from '@/components/mudend/AddressAutocomplete';
 import { ENDERECO_ATUAL } from '@/lib/mock-data';
-import { formatSugestaoLinha, formatSugestaoDetalhe } from '@/lib/address';
-import { useAddressSearch } from '@/lib/use-address-search';
-import type { EnderecoSugestao, EnderecoState } from '@/lib/types';
+import { formatSugestaoLinha, formatEnderecoAtual } from '@/lib/address';
+import type { EnderecoSugestao } from '@/lib/types';
 
 const conditionalMotion = {
   initial: { opacity: 0, y: -8 },
@@ -29,6 +30,8 @@ export default function EnderecoPage() {
   const pathname = usePathname();
   useTrackScreen(pathname);
   const router = useRouter();
+
+  const { session } = useParticipantSession();
 
   const novoEndereco = useMudendStore((s) => s.novoEndereco);
   const updateNovoEndereco = useMudendStore((s) => s.updateNovoEndereco);
@@ -43,15 +46,11 @@ export default function EnderecoPage() {
 
   const [exitOpen, setExitOpen] = useState(false);
 
-  const state: EnderecoState = enderecoSugestao
-    ? 'selected'
-    : novoEndereco.trim().length >= 4
-      ? 'typing'
-      : 'idle';
+  const enderecoAtual = session?.currentAddress
+    ? formatEnderecoAtual(session.currentAddress)
+    : ENDERECO_ATUAL;
 
-  const { results, isLoading, error } = useAddressSearch(
-    enderecoSugestao ? '' : novoEndereco
-  );
+  const isSelected = Boolean(enderecoSugestao);
 
   function limparCondicionais() {
     updateNumero('');
@@ -75,17 +74,17 @@ export default function EnderecoPage() {
     limparCondicionais();
     trackEvent('form_input', pathname, 'endereco-sugestao-selecionada', {
       id: sugestao.place_id,
-      temNumero: Boolean(sugestao.address.house_number),
+      temNumero: Boolean(sugestao.address?.house_number),
     });
   }
 
   const sugestaoTemNumero = Boolean(enderecoSugestao?.address?.house_number);
-  const showNumero = state === 'selected' && !sugestaoTemNumero;
-  const showComplemento = state === 'selected';
+  const showNumero = isSelected && !sugestaoTemNumero;
+  const showComplemento = isSelected;
 
   const temNumero = sugestaoTemNumero || numero.trim().length > 0;
   const complementoOk = complementoSkipped || complemento.trim().length > 0;
-  const isValid = state === 'selected' && temNumero && complementoOk;
+  const isValid = isSelected && temNumero && complementoOk;
 
   function handleToggleSemComplemento(checked: boolean) {
     if (checked) updateComplemento('');
@@ -123,8 +122,8 @@ export default function EnderecoPage() {
       <div className="mt-6">
         <p className="text-sm font-medium text-text-primary">Seu endereço atual</p>
         <Card variant="neutral" padding="md" className="mt-4 rounded-lg">
-          <p className="text-xs text-text-secondary">{ENDERECO_ATUAL.eyebrow}</p>
-          <p className="mt-2 text-sm font-semibold text-text-primary">{ENDERECO_ATUAL.linha}</p>
+          <p className="text-xs text-text-secondary">{enderecoAtual.eyebrow}</p>
+          <p className="mt-2 text-sm font-semibold text-text-primary">{enderecoAtual.linha}</p>
         </Card>
       </div>
 
@@ -133,59 +132,16 @@ export default function EnderecoPage() {
           Pra onde você quer levar sua Nio Fibra?
         </p>
 
-        <div className="relative mt-4">
-          <Input
+        <div className="mt-4">
+          <AddressAutocomplete
             label="Seu novo endereço ou CEP"
-            value={novoEndereco}
-            onChange={handleEnderecoChange}
-            trackingId="endereco-novo"
-            valid={state === 'selected'}
             placeholder="Digite a rua ou o CEP"
+            value={novoEndereco}
+            onValueChange={handleEnderecoChange}
+            selected={enderecoSugestao}
+            onSelect={handleSelectSugestao}
+            trackingId="endereco-novo"
           />
-
-          <AnimatePresence>
-            {state === 'typing' && (
-              <motion.div
-                initial={{ opacity: 0, y: -4 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -4 }}
-                transition={{ duration: 0.15 }}
-                className="absolute inset-x-0 top-full z-20 mt-2 overflow-hidden rounded-md border border-border bg-white shadow-elevated"
-              >
-                {isLoading ? (
-                  <p className="px-4 py-3 text-sm text-text-secondary">
-                    Buscando endereços...
-                  </p>
-                ) : error ? (
-                  <p className="px-4 py-3 text-sm text-text-secondary">{error}</p>
-                ) : results.length > 0 ? (
-                  <ul>
-                    {results.map((sugestao) => (
-                      <li key={sugestao.place_id}>
-                        <button
-                          type="button"
-                          onMouseDown={(e) => e.preventDefault()}
-                          onClick={() => handleSelectSugestao(sugestao)}
-                          className="w-full border-b border-border px-4 py-3 text-left last:border-b-0 active:bg-areia"
-                        >
-                          <span className="block text-sm font-semibold text-text-primary">
-                            {formatSugestaoLinha(sugestao)}
-                          </span>
-                          <span className="mt-1 block text-xs font-normal text-text-secondary">
-                            {formatSugestaoDetalhe(sugestao)}
-                          </span>
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p className="px-4 py-3 text-sm text-text-secondary">
-                    Nenhum endereço encontrado. Confira a digitação.
-                  </p>
-                )}
-              </motion.div>
-            )}
-          </AnimatePresence>
         </div>
 
         <AnimatePresence initial={false}>

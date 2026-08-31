@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import { useTrackScreen, trackEvent } from '@/lib/tracking';
 import { AppShell } from '@/components/ui/AppShell';
@@ -20,7 +21,7 @@ function OffersCarousel({ items }: { items: string[] }) {
         {items.map((label) => (
           <div
             key={label}
-            className="flex h-28 w-64 shrink-0 items-center justify-center rounded-2xl bg-verde-escuro"
+            className="flex h-28 w-64 shrink-0 items-center justify-center rounded-lg bg-verde-escuro"
           >
             <span className="text-sm font-medium text-white">{label}</span>
           </div>
@@ -43,10 +44,15 @@ export default function HomePage() {
     <AppShell header={<HomeHeader />}>
       <div className="px-5 pt-5">
         <h2 className="mb-3 text-lg font-semibold text-verde-escuro">Faturas em aberto</h2>
-        <div className="mb-8 flex items-start gap-3 rounded-2xl bg-areia p-4">
-          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white">
-            <NioIcon name="check-circle" size={20} />
-          </span>
+        <div className="mb-8 flex items-start gap-3 rounded-lg bg-areia p-4">
+          <Image
+            src="/images/joia.png"
+            alt=""
+            width={64}
+            height={64}
+            unoptimized
+            className="h-16 w-16 shrink-0 object-contain"
+          />
           <div>
             <p className="text-sm font-semibold text-verde-escuro">Suas faturas estão em dia!</p>
             <p className="mt-1 text-sm text-text-secondary">
@@ -56,8 +62,15 @@ export default function HomePage() {
         </div>
 
         <h2 className="mb-3 text-lg font-semibold text-verde-escuro">Acesso rápido</h2>
-        <div className="mb-3 flex items-center gap-3 rounded-2xl bg-verde-claro p-4">
-          <NioIcon name="smartphone" size={22} />
+        <div className="mb-3 flex items-center gap-3 rounded-lg bg-verde-claro p-4">
+          <Image
+            src="/images/celular.png"
+            alt=""
+            width={48}
+            height={48}
+            unoptimized
+            className="h-12 w-12 shrink-0 object-contain"
+          />
           <span className="flex-1 text-sm font-semibold text-primary-background">Internet móvel 5G</span>
           <span className="rounded-full bg-verde-escuro px-2.5 py-1 text-[10px] font-semibold text-white">
             NOVO
@@ -65,9 +78,9 @@ export default function HomePage() {
         </div>
         <div className="mb-8 grid grid-cols-2 gap-3">
           {ACESSO_RAPIDO.map((item) => (
-            <div key={item.label} className="rounded-2xl border border-border bg-white p-4">
+            <div key={item.label} className="rounded-lg border border-border bg-white p-4">
               <NioIcon name={item.icon} size={20} />
-              <p className="mt-3 text-sm text-verde-escuro">{item.label}</p>
+              <p className="mt-3 text-sm font-semibold text-verde-escuro">{item.label}</p>
             </div>
           ))}
         </div>

@@ -31,7 +31,13 @@ export function AlterarContatoSheet({ open, onClose }: AlterarContatoSheetProps)
   }
 
   return (
-    <BottomSheet open={open} onClose={onClose} sheetId="alterar-contato" title="Alterar contato">
+    <BottomSheet
+      open={open}
+      onClose={onClose}
+      sheetId="alterar-contato"
+      title="Alterar contato"
+      showClose
+    >
       <Input
         label="Telefone principal"
         value={value}
