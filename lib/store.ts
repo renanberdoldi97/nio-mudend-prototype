@@ -2,7 +2,7 @@
 
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { TrackingEvent, Periodo } from './types';
+import type { TrackingEvent, Periodo, EnderecoSugestao } from './types';
 import { CONTATO_MOCK } from './mock-data';
 
 export function createSessionId(): string {
@@ -17,6 +17,8 @@ type MudendData = {
   events: TrackingEvent[];
   novoEndereco: string;
   enderecoCepInfo: string | null;
+  /** Sugestão escolhida no autocomplete. `null` = digitação livre (sem seleção). */
+  enderecoSugestao: EnderecoSugestao | null;
   numero: string;
   complemento: string;
   complementoSkipped: boolean;
@@ -31,6 +33,7 @@ type MudendActions = {
   addEvent: (event: TrackingEvent) => void;
   updateNovoEndereco: (value: string) => void;
   setEnderecoCepInfo: (value: string | null) => void;
+  setEnderecoSugestao: (value: EnderecoSugestao | null) => void;
   updateNumero: (value: string) => void;
   updateComplemento: (value: string) => void;
   setComplementoSkipped: (value: boolean) => void;
@@ -52,6 +55,7 @@ function createInitialData(sessionId: string): MudendData {
     events: [],
     novoEndereco: '',
     enderecoCepInfo: null,
+    enderecoSugestao: null,
     numero: '',
     complemento: '',
     complementoSkipped: false,
@@ -74,6 +78,7 @@ export const useMudendStore = create<MudendState>()(
       addEvent: (event) => set((state) => ({ events: [...state.events, event] })),
       updateNovoEndereco: (novoEndereco) => set({ novoEndereco }),
       setEnderecoCepInfo: (enderecoCepInfo) => set({ enderecoCepInfo }),
+      setEnderecoSugestao: (enderecoSugestao) => set({ enderecoSugestao }),
       updateNumero: (numero) => set({ numero }),
       updateComplemento: (complemento) => set({ complemento }),
       setComplementoSkipped: (complementoSkipped) => set({ complementoSkipped }),

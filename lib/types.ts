@@ -21,3 +21,17 @@ export type TrackingEvent = {
 };
 
 export type Periodo = 'manha' | 'tarde';
+
+export type EnderecoSugestao = {
+  id: string;
+  logradouro: string;
+  /** Presente só quando o endereço já vem com número. */
+  numero?: string;
+  bairro: string;
+  cidade: string;
+  uf: string;
+  cep: string;
+};
+
+/** Estado do campo de endereço com autocomplete. */
+export type EnderecoState = 'idle' | 'typing' | 'selected';

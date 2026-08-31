@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
 import { usePathname, useRouter } from 'next/navigation';
 import { useTrackScreen, trackEvent } from '@/lib/tracking';
 import { useMudendStore } from '@/lib/store';
@@ -10,82 +11,89 @@ import { ExitConfirmSheet } from '@/components/ui/ExitConfirmSheet';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
+import { Checkbox } from '@/components/ui/Checkbox';
 import { HouseIllustration } from '@/components/mudend/HouseIllustration';
-import { ENDERECO_ATUAL } from '@/lib/mock-data';
-import { isCepLike, fetchViaCep, hasNumero } from '@/lib/viacep';
+import {
+  ENDERECO_ATUAL,
+  filtrarSugestoes,
+  formatSugestaoLinha,
+  formatSugestaoDetalhe,
+} from '@/lib/mock-data';
+import type { EnderecoSugestao, EnderecoState } from '@/lib/types';
 
-type ValidationSource = 'cep' | 'text' | null;
+const conditionalMotion = {
+  initial: { opacity: 0, y: -8 },
+  animate: { opacity: 1, y: 0 },
+  exit: { opacity: 0, y: -8 },
+  transition: { duration: 0.2 },
+};
 
 export default function EnderecoPage() {
   const pathname = usePathname();
   useTrackScreen(pathname);
   const router = useRouter();
 
-  const novoEndereco = useMudendStore((state) => state.novoEndereco);
-  const updateNovoEndereco = useMudendStore((state) => state.updateNovoEndereco);
-  const enderecoCepInfo = useMudendStore((state) => state.enderecoCepInfo);
-  const setEnderecoCepInfo = useMudendStore((state) => state.setEnderecoCepInfo);
-  const numero = useMudendStore((state) => state.numero);
-  const updateNumero = useMudendStore((state) => state.updateNumero);
-  const complemento = useMudendStore((state) => state.complemento);
-  const updateComplemento = useMudendStore((state) => state.updateComplemento);
-  const complementoSkipped = useMudendStore((state) => state.complementoSkipped);
-  const setComplementoSkipped = useMudendStore((state) => state.setComplementoSkipped);
+  const novoEndereco = useMudendStore((s) => s.novoEndereco);
+  const updateNovoEndereco = useMudendStore((s) => s.updateNovoEndereco);
+  const enderecoSugestao = useMudendStore((s) => s.enderecoSugestao);
+  const setEnderecoSugestao = useMudendStore((s) => s.setEnderecoSugestao);
+  const numero = useMudendStore((s) => s.numero);
+  const updateNumero = useMudendStore((s) => s.updateNumero);
+  const complemento = useMudendStore((s) => s.complemento);
+  const updateComplemento = useMudendStore((s) => s.updateComplemento);
+  const complementoSkipped = useMudendStore((s) => s.complementoSkipped);
+  const setComplementoSkipped = useMudendStore((s) => s.setComplementoSkipped);
 
   const [exitOpen, setExitOpen] = useState(false);
-  const [cepLoading, setCepLoading] = useState(false);
-  const [cepError, setCepError] = useState<string | null>(null);
-  const [validationSource, setValidationSource] = useState<ValidationSource>(
-    novoEndereco.trim().length >= 3 ? 'text' : null
+
+  const state: EnderecoState = enderecoSugestao
+    ? 'selected'
+    : novoEndereco.trim().length >= 3
+      ? 'typing'
+      : 'idle';
+
+  const sugestoes = useMemo(
+    () => (state === 'typing' ? filtrarSugestoes(novoEndereco) : []),
+    [state, novoEndereco]
   );
 
-  async function handleEnderecoChange(value: string) {
+  function limparCondicionais() {
+    updateNumero('');
+    updateComplemento('');
+    setComplementoSkipped(false);
+  }
+
+  function handleEnderecoChange(value: string) {
     updateNovoEndereco(value);
-    setCepError(null);
-    setValidationSource(null);
-
-    if (isCepLike(value)) {
-      setCepLoading(true);
-      const result = await fetchViaCep(value);
-      setCepLoading(false);
-
-      // Se o cliente continuou digitando enquanto a busca estava em andamento,
-      // não sobrescreve o que ele já digitou.
-      const aindaEhOMesmoValor = useMudendStore.getState().novoEndereco === value;
-      if (!aindaEhOMesmoValor) return;
-
-      if (result) {
-        updateNovoEndereco(result.logradouro);
-        setEnderecoCepInfo(`CEP ${result.cep} · ${result.localidade}/${result.uf}`);
-        setValidationSource('cep');
-        trackEvent('form_input', pathname, 'endereco-cep-autofill', { cep: value, encontrado: true });
-      } else {
-        setEnderecoCepInfo(null);
-        setCepError('CEP não encontrado. Confira o número ou digite o nome da rua.');
-        trackEvent('form_input', pathname, 'endereco-cep-autofill', { cep: value, encontrado: false });
-      }
-      return;
-    }
-
-    setEnderecoCepInfo(null);
-    if (value.trim().length >= 3) {
-      setValidationSource('text');
+    // Editar o campo depois de selecionar volta pro estado de digitação:
+    // o check verde some e os campos condicionais desaparecem.
+    if (enderecoSugestao && value !== formatSugestaoLinha(enderecoSugestao)) {
+      setEnderecoSugestao(null);
+      limparCondicionais();
     }
   }
 
-  const needsNumero = validationSource === 'cep' ? true : !hasNumero(novoEndereco);
-  const showNumero = validationSource !== null && needsNumero;
-  const showComplemento =
-    validationSource !== null && (!needsNumero || numero.trim().length > 0);
+  function handleSelectSugestao(sugestao: EnderecoSugestao) {
+    setEnderecoSugestao(sugestao);
+    updateNovoEndereco(formatSugestaoLinha(sugestao));
+    limparCondicionais();
+    trackEvent('form_input', pathname, 'endereco-sugestao-selecionada', {
+      id: sugestao.id,
+      temNumero: Boolean(sugestao.numero),
+    });
+  }
 
-  const isValid =
-    validationSource !== null &&
-    (!needsNumero || numero.trim().length > 0) &&
-    (complementoSkipped || complemento.trim().length > 0);
+  const sugestaoTemNumero = Boolean(enderecoSugestao?.numero);
+  const showNumero = state === 'selected' && !sugestaoTemNumero;
+  const showComplemento = state === 'selected';
 
-  function handleSemComplemento() {
-    trackEvent('complement_skipped', pathname, 'complemento-sem-complemento');
-    setComplementoSkipped(true);
+  const temNumero = sugestaoTemNumero || numero.trim().length > 0;
+  const complementoOk = complementoSkipped || complemento.trim().length > 0;
+  const isValid = state === 'selected' && temNumero && complementoOk;
+
+  function handleToggleSemComplemento(checked: boolean) {
+    if (checked) updateComplemento('');
+    setComplementoSkipped(checked);
   }
 
   return (
@@ -99,94 +107,123 @@ export default function EnderecoPage() {
         />
       }
       cta={
-        <Button trackingId="endereco-continuar" disabled={!isValid} onClick={() => router.push('/mudend/consulta')}>
+        <Button
+          trackingId="endereco-continuar"
+          disabled={!isValid}
+          onClick={() => router.push('/mudend/consulta')}
+        >
           Continuar
         </Button>
       }
       overlay={<ExitConfirmSheet open={exitOpen} onClose={() => setExitOpen(false)} />}
     >
-      <h1 className="mb-2 text-2xl font-semibold text-text-primary">
+      <h1 className="text-2xl font-semibold text-text-primary">
         Vamos levar sua Nio Fibra pro novo endereço
       </h1>
-      <p className="mb-6 text-sm text-text-secondary">
+      <p className="mt-4 text-sm text-text-secondary">
         Você só precisa nos contar pra onde está se mudando.
       </p>
 
-      <p className="mb-2 text-sm font-medium text-text-primary">Seu endereço atual</p>
-      <Card variant="neutral" padding="md" className="mb-6">
-        <p className="text-xs text-text-secondary">{ENDERECO_ATUAL.eyebrow}</p>
-        <p className="mt-1 text-sm font-semibold text-text-primary">{ENDERECO_ATUAL.linha}</p>
-      </Card>
+      <div className="mt-6">
+        <p className="text-sm font-medium text-text-primary">Seu endereço atual</p>
+        <Card variant="neutral" padding="md" className="mt-4 rounded-lg">
+          <p className="text-xs text-text-secondary">{ENDERECO_ATUAL.eyebrow}</p>
+          <p className="mt-2 text-sm font-semibold text-text-primary">{ENDERECO_ATUAL.linha}</p>
+        </Card>
+      </div>
 
-      <p className="mb-2 text-sm font-medium text-text-primary">Pra onde você quer levar sua Nio Fibra?</p>
-      <Input
-        label="Seu novo endereço ou CEP"
-        value={novoEndereco}
-        onChange={handleEnderecoChange}
-        trackingId="endereco-novo"
-        valid={validationSource !== null && !cepLoading}
-        loading={cepLoading}
-        error={cepError ?? undefined}
-        hint={enderecoCepInfo ?? undefined}
-      />
+      <div className="mt-6">
+        <p className="text-sm font-medium text-text-primary">
+          Pra onde você quer levar sua Nio Fibra?
+        </p>
 
-      {showNumero && (
-        <div className="mt-3">
+        <div className="relative mt-4">
           <Input
-            label="Número"
-            value={numero}
-            onChange={updateNumero}
-            trackingId="endereco-numero"
-            inputMode="numeric"
-            valid={numero.trim().length > 0}
+            label="Seu novo endereço ou CEP"
+            value={novoEndereco}
+            onChange={handleEnderecoChange}
+            trackingId="endereco-novo"
+            valid={state === 'selected'}
+            placeholder="Digite a rua ou o CEP"
           />
-        </div>
-      )}
 
-      {showComplemento && (
-        <div className="mt-3">
-          {complementoSkipped ? (
-            <div className="flex h-14 w-full items-center justify-between rounded-md border-[1.5px] border-primary-background bg-white px-4">
-              <span className="text-base text-text-primary">Sem complemento</span>
-              <button
-                type="button"
-                onClick={() => {
-                  trackEvent('element_click', pathname, 'complemento-remover-skip');
-                  setComplementoSkipped(false);
-                }}
-                aria-label="Remover marcação de sem complemento"
+          <AnimatePresence>
+            {state === 'typing' && (
+              <motion.div
+                initial={{ opacity: 0, y: -4 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -4 }}
+                transition={{ duration: 0.15 }}
+                className="absolute inset-x-0 top-full z-20 mt-2 overflow-hidden rounded-md border border-border bg-white shadow-elevated"
               >
-                <svg viewBox="0 0 20 20" fill="none" className="h-4 w-4">
-                  <path
-                    d="M5 5L15 15M15 5L5 15"
-                    stroke="#124803"
-                    strokeWidth="1.8"
-                    strokeLinecap="round"
-                  />
-                </svg>
-              </button>
-            </div>
-          ) : (
-            <>
+                {sugestoes.length > 0 ? (
+                  <ul>
+                    {sugestoes.map((sugestao) => (
+                      <li key={sugestao.id}>
+                        <button
+                          type="button"
+                          onMouseDown={(e) => e.preventDefault()}
+                          onClick={() => handleSelectSugestao(sugestao)}
+                          className="w-full border-b border-border px-4 py-3 text-left last:border-b-0 active:bg-areia"
+                        >
+                          <span className="block text-sm font-medium text-text-primary">
+                            {formatSugestaoLinha(sugestao)}
+                          </span>
+                          <span className="mt-1 block text-xs text-text-secondary">
+                            {formatSugestaoDetalhe(sugestao)}
+                          </span>
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="px-4 py-3 text-sm text-text-secondary">
+                    Nenhum endereço encontrado. Confira a digitação.
+                  </p>
+                )}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+
+        <AnimatePresence initial={false}>
+          {showNumero && (
+            <motion.div key="numero" {...conditionalMotion} className="mt-6">
+              <Input
+                label="Número"
+                value={numero}
+                onChange={updateNumero}
+                trackingId="endereco-numero"
+                inputMode="numeric"
+                valid={numero.trim().length > 0}
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        <AnimatePresence initial={false}>
+          {showComplemento && (
+            <motion.div key="complemento" {...conditionalMotion} className="mt-6">
               <Input
                 label="Complemento"
                 value={complemento}
                 onChange={updateComplemento}
                 trackingId="endereco-complemento"
                 placeholder="Ex: Apartamento 12, Casa 2, Bloco A..."
-                valid={complemento.trim().length > 0}
+                disabled={complementoSkipped}
+                valid={!complementoSkipped && complemento.trim().length > 0}
               />
-              <button
-                type="button"
-                onClick={handleSemComplemento}
-                className="mt-2 px-1 text-sm font-medium text-primary-background"
-              >
-                Sem complemento
-              </button>
-            </>
+              <Checkbox
+                className="mt-4"
+                checked={complementoSkipped}
+                onChange={handleToggleSemComplemento}
+                trackingId="complemento-sem-complemento"
+                label="Sem complemento"
+              />
+            </motion.div>
           )}
-        </div>
-      )}
+        </AnimatePresence>
+      </div>
     </FlowScreen>
   );
 }

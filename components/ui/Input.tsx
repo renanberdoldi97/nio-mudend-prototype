@@ -112,8 +112,8 @@ export function Input({
           </svg>
         )}
       </div>
-      {hasError && <p className="mt-1.5 px-1 text-xs text-error">{error}</p>}
-      {!hasError && hint && <p className="mt-1.5 px-1 text-xs text-text-disabled">{hint}</p>}
+      {hasError && <p className="mt-2 px-1 text-xs text-error">{error}</p>}
+      {!hasError && hint && <p className="mt-2 px-1 text-xs text-text-disabled">{hint}</p>}
     </div>
   );
 }
