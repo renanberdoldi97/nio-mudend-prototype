@@ -9,7 +9,7 @@ export function HouseIllustration() {
       height={134}
       unoptimized
       priority
-      className="mx-auto h-28 w-auto"
+      className="h-auto max-w-full object-contain"
     />
   );
 }

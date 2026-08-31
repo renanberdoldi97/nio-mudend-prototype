@@ -97,7 +97,9 @@ export function FlowHeader({
         )}
         {rightAction === 'none' && <span className="w-9" />}
       </header>
-      {illustration}
+      {illustration && (
+        <div className="flex items-center justify-center px-3">{illustration}</div>
+      )}
     </div>
   );
 }

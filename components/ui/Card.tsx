@@ -7,7 +7,7 @@ type CardVariant = 'neutral' | 'white' | 'selected';
 type CardPadding = 'none' | 'sm' | 'md' | 'lg';
 
 const variantStyles: Record<CardVariant, string> = {
-  neutral: 'bg-card-content border border-transparent',
+  neutral: 'bg-card-content border border-card-border',
   white: 'bg-white border border-border',
   selected: 'bg-verde-claro border-[1.5px] border-primary-background',
 };

@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { usePathname, useRouter } from 'next/navigation';
 import { useTrackScreen, trackEvent } from '@/lib/tracking';
@@ -13,12 +13,9 @@ import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Checkbox } from '@/components/ui/Checkbox';
 import { HouseIllustration } from '@/components/mudend/HouseIllustration';
-import {
-  ENDERECO_ATUAL,
-  filtrarSugestoes,
-  formatSugestaoLinha,
-  formatSugestaoDetalhe,
-} from '@/lib/mock-data';
+import { ENDERECO_ATUAL } from '@/lib/mock-data';
+import { formatSugestaoLinha, formatSugestaoDetalhe } from '@/lib/address';
+import { useAddressSearch } from '@/lib/use-address-search';
 import type { EnderecoSugestao, EnderecoState } from '@/lib/types';
 
 const conditionalMotion = {
@@ -48,13 +45,12 @@ export default function EnderecoPage() {
 
   const state: EnderecoState = enderecoSugestao
     ? 'selected'
-    : novoEndereco.trim().length >= 3
+    : novoEndereco.trim().length >= 4
       ? 'typing'
       : 'idle';
 
-  const sugestoes = useMemo(
-    () => (state === 'typing' ? filtrarSugestoes(novoEndereco) : []),
-    [state, novoEndereco]
+  const { results, isLoading, error } = useAddressSearch(
+    enderecoSugestao ? '' : novoEndereco
   );
 
   function limparCondicionais() {
@@ -78,12 +74,12 @@ export default function EnderecoPage() {
     updateNovoEndereco(formatSugestaoLinha(sugestao));
     limparCondicionais();
     trackEvent('form_input', pathname, 'endereco-sugestao-selecionada', {
-      id: sugestao.id,
-      temNumero: Boolean(sugestao.numero),
+      id: sugestao.place_id,
+      temNumero: Boolean(sugestao.address.house_number),
     });
   }
 
-  const sugestaoTemNumero = Boolean(enderecoSugestao?.numero);
+  const sugestaoTemNumero = Boolean(enderecoSugestao?.address?.house_number);
   const showNumero = state === 'selected' && !sugestaoTemNumero;
   const showComplemento = state === 'selected';
 
@@ -156,20 +152,26 @@ export default function EnderecoPage() {
                 transition={{ duration: 0.15 }}
                 className="absolute inset-x-0 top-full z-20 mt-2 overflow-hidden rounded-md border border-border bg-white shadow-elevated"
               >
-                {sugestoes.length > 0 ? (
+                {isLoading ? (
+                  <p className="px-4 py-3 text-sm text-text-secondary">
+                    Buscando endereços...
+                  </p>
+                ) : error ? (
+                  <p className="px-4 py-3 text-sm text-text-secondary">{error}</p>
+                ) : results.length > 0 ? (
                   <ul>
-                    {sugestoes.map((sugestao) => (
-                      <li key={sugestao.id}>
+                    {results.map((sugestao) => (
+                      <li key={sugestao.place_id}>
                         <button
                           type="button"
                           onMouseDown={(e) => e.preventDefault()}
                           onClick={() => handleSelectSugestao(sugestao)}
                           className="w-full border-b border-border px-4 py-3 text-left last:border-b-0 active:bg-areia"
                         >
-                          <span className="block text-sm font-medium text-text-primary">
+                          <span className="block text-sm font-semibold text-text-primary">
                             {formatSugestaoLinha(sugestao)}
                           </span>
-                          <span className="mt-1 block text-xs text-text-secondary">
+                          <span className="mt-1 block text-xs font-normal text-text-secondary">
                             {formatSugestaoDetalhe(sugestao)}
                           </span>
                         </button>
