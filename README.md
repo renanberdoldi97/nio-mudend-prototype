@@ -43,8 +43,14 @@ conferência durante o teste — é uma tela de debug, não faz parte da jornada
 real do usuário.
 
 Tipos de evento: `screen_view`, `screen_leave`, `element_click`,
-`form_input`, `calendar_click`, `checkbox_toggle`, `bottom_sheet_open`,
-`bottom_sheet_close`, `session_complete`, `session_abandon`.
+`dead_click`, `form_input`, `calendar_click`, `checkbox_toggle`,
+`bottom_sheet_open`, `bottom_sheet_close`, `session_complete`,
+`session_abandon`.
+
+`dead_click` registra cliques que não atingem nenhum elemento interativo
+(nem `data-element-id`, `<button>/<a>/<input>/<select>`, nem `role="button"`)
+— útil pra achar onde o participante espera uma ação e nada acontece. O
+listener global fica em `app/dead-click-tracker.tsx`.
 
 ## Onboarding do participante
 

@@ -2,6 +2,7 @@ export type TrackingEventType =
   | 'screen_view'
   | 'screen_leave'
   | 'element_click'
+  | 'dead_click'
   | 'form_input'
   | 'calendar_click'
   | 'calendar_click_blocked'
