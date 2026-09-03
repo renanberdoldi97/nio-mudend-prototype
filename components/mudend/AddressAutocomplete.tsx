@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { usePathname } from 'next/navigation';
 import { Input } from '@/components/ui/Input';
@@ -52,6 +52,19 @@ export function AddressAutocomplete({
 }: AddressAutocompleteProps) {
   const pathname = usePathname();
 
+  // Dropdown fechado por clique fora — sem selecionar nada. Volta a abrir assim
+  // que o cliente digita de novo. Fechar assim NUNCA marca o campo como "selected".
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [dismissed, setDismissed] = useState(false);
+  useEffect(() => setDismissed(false), [value]);
+  useEffect(() => {
+    function onPointerDown(e: PointerEvent) {
+      if (!containerRef.current?.contains(e.target as Node)) setDismissed(true);
+    }
+    document.addEventListener('pointerdown', onPointerDown);
+    return () => document.removeEventListener('pointerdown', onPointerDown);
+  }, []);
+
   const digits = value.replace(/\D/g, '');
   const cepParcial = !selected && pareceCep(value) && digits.length >= 4 && digits.length < 8;
   const cepExato = !selected && digits.length === 8 ? acharCepExato(digits) : null;
@@ -60,17 +73,28 @@ export function AddressAutocomplete({
 
   // Suprime a busca remota enquanto o cliente digita um CEP que resolvemos localmente.
   const remoteQuery = selected || cepParcial || cepExato ? '' : value;
-  const { results, isLoading, error } = useAddressSearch(remoteQuery);
+  const { results, isLoading, error, numeroSemResultado } = useAddressSearch(remoteQuery);
 
-  const open = !selected && (cepParcial || value.trim().length >= 4);
+  const open = !selected && !dismissed && (cepParcial || value.trim().length >= 4);
   const queryEraCep = isCepLike(value);
 
-  const emptyMessage = queryEraCep
-    ? 'CEP não encontrado. Verifique a digitação.'
-    : 'Nenhum endereço encontrado. Tente incluir o bairro ou cidade.';
+  const emptyMessage = numeroSemResultado
+    ? 'Não encontramos esse número. Tente digitar só o nome da rua e escolher da lista.'
+    : queryEraCep
+      ? 'CEP não encontrado. Verifique a digitação.'
+      : 'Nenhum endereço encontrado. Tente incluir o bairro ou cidade.';
 
   function handleSelectSugestao(sugestao: EnderecoSugestao) {
     onSelect(sugestao);
+  }
+
+  // Ao sair do campo com uma sugestão selecionada, normaliza o texto pro formato
+  // canônico ("rua" quando não há número, "rua, número" quando há). Se o cliente
+  // tiver mexido no logradouro, a seleção já foi limpa antes daqui.
+  function handleBlur() {
+    if (!selected) return;
+    const canonical = formatSugestaoLinha(selected);
+    if (value !== canonical) onValueChange(canonical);
   }
 
   function handleSelectCepLocal(cep: string) {
@@ -104,7 +128,7 @@ export function AddressAutocomplete({
   }, [cepParcial, cepLocais.map((c) => c.cep).join(',')]);
 
   return (
-    <div className="relative">
+    <div className="relative" ref={containerRef}>
       <Input
         label={label}
         value={value}
@@ -112,6 +136,7 @@ export function AddressAutocomplete({
         trackingId={trackingId}
         valid={Boolean(selected)}
         placeholder={placeholder}
+        onBlurExtra={handleBlur}
       />
 
       <AnimatePresence>

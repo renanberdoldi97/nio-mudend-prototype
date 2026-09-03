@@ -16,7 +16,7 @@ import { Checkbox } from '@/components/ui/Checkbox';
 import { HouseIllustration } from '@/components/mudend/HouseIllustration';
 import { AddressAutocomplete } from '@/components/mudend/AddressAutocomplete';
 import { ENDERECO_ATUAL } from '@/lib/mock-data';
-import { formatSugestaoLinha, formatEnderecoAtual } from '@/lib/address';
+import { formatSugestaoLinha, formatEnderecoAtual, viaSugestao } from '@/lib/address';
 import type { EnderecoSugestao } from '@/lib/types';
 
 const conditionalMotion = {
@@ -60,17 +60,48 @@ export default function EnderecoPage() {
 
   function handleEnderecoChange(value: string) {
     updateNovoEndereco(value);
-    // Editar o campo depois de selecionar volta pro estado de digitação:
-    // o check verde some e os campos condicionais desaparecem.
-    if (enderecoSugestao && value !== formatSugestaoLinha(enderecoSugestao)) {
-      setEnderecoSugestao(null);
-      limparCondicionais();
+
+    if (!enderecoSugestao) return;
+
+    const rua = viaSugestao(enderecoSugestao);
+    const numeroDaSugestao = enderecoSugestao.address?.house_number ?? '';
+
+    // Ainda é o mesmo logradouro → o cliente está só mexendo no número.
+    if (value === rua || value.startsWith(rua)) {
+      const digitos = value.slice(rua.length).replace(/\D/g, '');
+
+      if (numeroDaSugestao !== '') {
+        // Regra unificada: sugestão COM número → número vive no próprio campo
+        // endereço. Reflete a edição no objeto da sugestão (o downstream lê
+        // `house_number`), sem exibir o campo Número separado.
+        if (numeroDaSugestao !== digitos) {
+          setEnderecoSugestao({
+            ...enderecoSugestao,
+            address: { ...enderecoSugestao.address, house_number: digitos || null },
+          });
+        }
+      } else if (value !== rua) {
+        // Regra unificada: sugestão SEM número (ViaCEP, CEP local ou Nominatim
+        // sem house_number) → os dígitos digitados depois da rua alimentam o
+        // campo Número dedicado. A seleção continua válida (check verde permanece).
+        // Quando `value === rua` (estado canônico em repouso) não mexemos no
+        // campo Número — senão o blur que normaliza o texto o apagaria.
+        updateNumero(digitos);
+      }
+      return;
     }
+
+    // Mexeu no logradouro → volta pro estado de digitação: check verde some e
+    // os campos condicionais desaparecem.
+    setEnderecoSugestao(null);
+    limparCondicionais();
   }
 
   function handleSelectSugestao(sugestao: EnderecoSugestao) {
     setEnderecoSugestao(sugestao);
     updateNovoEndereco(formatSugestaoLinha(sugestao));
+    // Sugestão sem número (ViaCEP / CEP / Nominatim sem house_number): já abre
+    // Número + Complemento + "Sem complemento" na hora, sem exigir 2ª seleção.
     limparCondicionais();
     trackEvent('form_input', pathname, 'endereco-sugestao-selecionada', {
       id: sugestao.place_id,

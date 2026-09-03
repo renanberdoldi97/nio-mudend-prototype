@@ -38,10 +38,28 @@ export function toUf(state?: string | null): string {
   return UF_BY_NAME[t.toLowerCase()] ?? t;
 }
 
-function via(s: EnderecoSugestao): string {
+/** Só o logradouro da sugestão, sem número. Se `road` vier vazio, usa o começo do display_name. */
+export function viaSugestao(s: EnderecoSugestao): string {
   const road = s.address?.road;
   const displayName = s.display_name ?? '';
   return road || displayName.split(',')[0]?.trim() || displayName;
+}
+
+const via = viaSugestao;
+
+/**
+ * Número digitado junto ao fim da query ("Rua X, 2299" ou "Rua X 2299" → "2299").
+ * Retorna `null` quando a query não termina em número, quando parece um CEP, ou
+ * quando não há nome de rua antes do número.
+ */
+export function numeroNaQuery(query: string): string | null {
+  const t = query.trim();
+  if (/^\d{5}-?\d{3}$/.test(t)) return null;
+  const m = t.match(/^(.+?),?\s*(\d+)\s*$/);
+  if (!m) return null;
+  const antes = m[1].trim().replace(/,\s*$/, '');
+  if (antes.length < 3 || /\d$/.test(antes)) return null;
+  return m[2];
 }
 
 /**
