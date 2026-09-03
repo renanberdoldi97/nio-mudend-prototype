@@ -40,7 +40,7 @@ export default function ConfirmacaoPage() {
         </>
       }
     >
-      <h1 className="mb-2 text-2xl font-semibold text-verde-escuro">
+      <h1 className="mb-6 text-2xl font-semibold text-verde-escuro">
         Confira se está tudo certo com sua instalação
       </h1>
       <ConfirmationSummary

@@ -6,6 +6,8 @@ export type TrackingEventType =
   | 'calendar_click'
   | 'calendar_click_blocked'
   | 'complement_skipped'
+  | 'cep_suggestion_shown'
+  | 'cep_suggestion_selected'
   | 'checkbox_toggle'
   | 'bottom_sheet_open'
   | 'bottom_sheet_close'
