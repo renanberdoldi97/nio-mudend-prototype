@@ -17,11 +17,14 @@ const ACESSO_RAPIDO: { icon: IconName; label: string }[] = [
 function OffersCarousel({ items }: { items: string[] }) {
   return (
     <div>
-      <div className="flex gap-3 overflow-x-auto no-scrollbar pb-1">
+      {/* -mx-5 px-4: quebra o gutter de 20px da página e usa 16px de padding
+          lateral próprio pro carrossel. Cards em 16/9, cantos de 16px (rounded-lg
+          = --radius-lg), com um respiro à direita sinalizando que dá pra deslizar. */}
+      <div className="-mx-5 flex gap-3 overflow-x-auto no-scrollbar px-4 pb-1">
         {items.map((label) => (
           <div
             key={label}
-            className="flex h-28 w-64 shrink-0 items-center justify-center rounded-lg bg-verde-escuro"
+            className="flex aspect-[16/9] w-[88%] shrink-0 items-center justify-center rounded-lg bg-verde-escuro"
           >
             <span className="text-sm font-medium text-white">{label}</span>
           </div>
